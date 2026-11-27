@@ -451,76 +451,74 @@ ${V.facturen.length ? `<div class="scrollx"><table class="mini" style="min-width
 // ZO WERKT HET
 // =====================================================================
 function werkwijzeScherm() {
-  // Uitleg voor Henk: kort, groot, zonder vakjargon. Techniek staat ingeklapt onderaan.
-  const ga = (k, label) => `<button class="link" data-v="${k}">${label}</button>`;
-  const KOSTEN = 41, klein = 0.5 * PRIJS_BOK, groot = 4 * PRIJS_BOK, perDag = Math.round(SCAN.publicaties / 14);
-  const maanden = Math.floor(PRIJS_BOK / KOSTEN);
+  // Uitleg voor Henk: hoe RekRadar evenementen vindt en aan de organisator komt, en hoe zeker dat is.
+  // Bewust zonder kosten of opbrengst, en zonder leveren: dat kent Henk al. Alles volgt de echte nachtscan en contactzoeker.
   const NTB = '<span class="ntb">nog te bouwen</span>';
-  const MAAN = I('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
-  const stappen = [
-    [MAAN, '\'s Nachts', 'RekRadar zoekt', `Hij leest de evenementvergunningen die gemeenten in het Gemeenteblad publiceren (zo'n ${perDag} per dag) en zoekt bij elk evenement wie het organiseert en hoe je die mailt.`],
-    [ICON.mail, '\'s Ochtends', 'Jij kijkt en klikt', 'De mails staan klaar, beste kans bovenaan. Je leest ze na en verstuurt met één klik uit je eigen Outlook, met jouw naam.'],
-    [ICON.kalender, 'Daarna', 'De klant boekt', `De klant antwoordt in je Outlook ${NTB}, of boekt en betaalt zelf: aantal rekken, losplek op de kaart en iDEAL ${NTB}. De klus staat in je planning.`]];
-  const verschil = [
-    ['Nieuwe klanten', 'Komen via je netwerk. Wie jou niet kent, belt je niet.', 'RekRadar vindt evenementen in heel Nederland, ook bij organisatoren die jou nog niet kennen.'],
-    ['Aanbod sturen', 'Zelf een mail schrijven met prijs en voorstel.', 'De mail staat klaar. Nalezen en op versturen klikken.'],
-    ['Afspraken maken', 'Mails heen en weer over aantal en losplek.', `De klant vult het zelf in en wijst de losplek aan op de kaart. ${NTB}`],
-    ['Vaste klanten', 'Zelf onthouden wie je volgend jaar weer moet mailen.', '120 dagen voor het evenement staat de mail vanzelf weer klaar.']];
-  const nacht = [
-    ['De overheid publiceert', 'Elke gemeente zet vergunningen voor evenementen openbaar in het Gemeenteblad.'],
-    ['RekRadar leest alles', 'Elke nacht om 03:15. Vannacht waren het er ' + SCAN.laatsteDagAantal + '.'],
-    ['Zoekt de organisator', 'In de vergunning, vorige jaren, Google en de website van de organisator. Daar staat het mailadres.'],
-    ['Rekent de kans uit', 'Dichtbij, groot of vaste klant: hoger. Ver weg of geen contact: lager.']];
+  const DOC = I('<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>');
+  const SCHILD = I('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>');
+  const BOEK = I('<path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h11"/>');
+  const WIE = { gem: 'Gemeente', rr: 'RekRadar', jij: 'Jij' };
+  // Voorbeeld: een evenement dichtbij met een goede kans, zodat het verhaal klopt.
+  const kandidaten = E.filter((x) => x.org && x.org.email && x.datum && dagenTot(x.datum) > 20 && x.km != null && x.km <= 40 && !KLANT.includes(x.s));
+  const vb = kandidaten.sort((a, b) => kans(b).score - kans(a).score)[0] || E[0];
+  const o = vb.org || {}, nieuw = DB.alle().filter((x) => x.gevonden === VANDAAG && x.s !== 'weg').length;
+  const vink = (t, ok = true) => `<li class="${ok ? 'ok' : 'nee'}">${ok ? '✓' : '✕'} ${t}</li>`;
+  // Per stap: wie, icoon, titel, uitleg, voorbeeld uit de demo, en hoe zeker deze stap is.
+  const fases = [
+    ['De vergunning vinden', 'Elke nacht, vanzelf.', [
+      ['gem', DOC, 'De gemeente publiceert de vergunning', 'Elke gemeente moet een evenementenvergunning openbaar maken in het Gemeenteblad: de aanvraag, en later het besluit. Dat is de officiële overheidsbron.',
+        `<div class="zv-doc"><small>Gemeenteblad · ${esc(vb.gem || vb.plaats)}</small><b>Evenementenvergunning ${esc(vb.naam)}</b><span>${datumKort(vb.datum)} · ${esc(vb.plaats)}</span></div>`,
+        'Zeker: het komt rechtstreeks van de gemeente.'],
+      ['rr', I('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'), 'RekRadar haalt alles op', 'Elke nacht om 03:15 alle nieuwe publicaties over evenementen: vergunningen, meldingen en verkeersbesluiten, van bijna alle gemeenten in Nederland. Hij kijkt steeds twee dagen terug, zodat er niets gemist wordt als een nacht mislukt.',
+        `<div class="zv-scan">${radarHtml()}<div><b>${SCAN.laatsteDagAantal}</b> publicaties vannacht<br><span>${SCAN.publicaties.toLocaleString('nl-NL')} sinds 12 november, uit ${SCAN.gemeenten} gemeenten</span></div></div>`,
+        'Echt gemeten: deze aantallen komen uit de echte scan.'],
+      ['rr', DOC, 'Leest de vergunning en ruimt op', 'Uit de tekst haalt hij de naam, datum, plaats en soort evenement. Geweigerde vergunningen en evenementen die al geweest zijn vallen af. Aanvraag, besluit en verkeersbesluit van hetzelfde evenement worden één evenement.',
+        `<div class="zv-lijst"><b>${esc(vb.naam)}</b><ul>${vink('Datum: ' + datumKort(vb.datum))}${vink('Soort: ' + esc(vb.soort || 'evenement'))}${vink(vb.fase === 'A' ? 'Vergunning in aanvraag' : 'Vergunning verleend')}${vink('Geweigerd of al geweest: valt af', false)}</ul></div>`,
+        'Let op: soms staan meerdere evenementen in één publicatie, of staat er geen naam in de titel. Daar kijkt de AI extra naar; dat is nog niet gemeten.']]],
+    ['De organisator en het mailadres vinden', 'Ook vanzelf, de dagen erna.', [
+      ['rr', BOEK, 'Eerst kijken wat al bekend is', 'Is de organisator al klant of stond het evenement vorig jaar ook in het Gemeenteblad? Dan neemt hij die gegevens over. Vaak staat de organisator ook gewoon in de vergunning zelf.',
+        `<div class="zv-org"><small>Uit de vergunning</small><b>${esc(o.naam)}</b><span>organisator van ${esc(vb.naam)}</span></div>`,
+        'Zeker als het uit je eigen klanten of de vergunning komt.'],
+      ['rr', ICON.zoek, 'Zoekt op internet', 'Hij zoekt met Google en een tweede zoekmachine: de eigen website van de organisator (contact- en privacypagina), lokaal nieuws, evenementenkalenders, sportbonden en dorpssites. Een AI (Claude) leest die pagina\'s en wijst aan wie de organisator is.',
+        `<div class="zv-org"><small>Gevonden op de eigen website</small><b>${esc(o.naam)}</b><span>${esc(o.email)}</span><small class="zv-bron">${esc(o.bron || '')} ↗</small></div>`,
+        'De AI raadt nooit: hij mag alleen kiezen uit wat echt op een pagina staat.'],
+      ['rr', SCHILD, 'Controleert het mailadres', 'Een adres telt alleen als het letterlijk op een gevonden pagina staat, en de link gaat mee. Daarna vier controles. Een privé-adres van een persoon wordt nooit gemaild: dan staat er "bellen".',
+        `<div class="zv-lijst"><b>${esc(o.email)}</b><ul>${vink('Staat letterlijk op de website, met link')}${vink('Algemeen adres (info@), geen privé-persoon')}${vink('Domein ontvangt mail')}${vink(`Zeker dat dit de organisator is: ${o.zek || 90}%`)}</ul></div>`,
+        'Faalt een controle, dan krijg je een waarschuwing of staat er "bellen" of "checken".']]],
+    ['Jij beslist', 'Een paar minuten per dag.', [
+      ['jij', ICON.mail, 'Jij ziet het bewijs en verstuurt', 'Bij elk evenement zie je de vergunning, waar het mailadres vandaan komt en hoe zeker het is. Klopt het, dan verstuur je de mail uit je eigen Outlook. Twijfel je, dan bel je of laat je hem liggen.',
+        `<div class="zv-mail"><small>Bron: <u>vergunning</u> · <u>${esc(o.bron || 'website')}</u></small><b>Fietsenrekken bij ${esc(vb.naam)}?</b><span class="zv-regel"></span><span class="zv-regel kort"></span><i>${ICON.mail} Versturen uit Outlook</i></div>`,
+        'Er gaat nooit iets vanzelf weg.']]]];
+  let n = 0;
+  const plan = fases.map(([fase, uitleg, stappen]) => `<section class="zp-fase"><div class="zp-fasekop"><b>${fase}</b><span>${uitleg}</span></div>
+<ol class="zp-stappen">${stappen.map(([wie, ic, titel, tekst, voorbeeld, zeker]) => `<li class="zp-stap wie-${wie}"><span class="zp-nr">${++n}</span>
+<div class="zp-tekst"><span class="zp-wie">${ic}${WIE[wie]}</span><b>${titel}</b><p>${tekst}</p><p class="zp-zeker">${zeker}</p></div><div class="zp-vb" aria-hidden="true">${voorbeeld}</div></li>`).join('')}</ol></section>`).join('');
+  const zeker = [
+    ['Wat zeker is', 'ok', ['De vergunningen zelf: die komen van de gemeente, uit het officiële Gemeenteblad.', `Het aantal: de scan las sinds 12 november ${SCAN.publicaties.toLocaleString('nl-NL')} publicaties uit ${SCAN.gemeenten} gemeenten. Dat is echt gemeten.`, 'Elk mailadres heeft een bron die je kunt aanklikken. Niets is verzonnen.']],
+    ['Wat nog gemeten moet worden', 'let', ['Hoe vaak RekRadar de juiste organisator en het juiste mailadres vindt. Dat meten we vóór het echte versturen: 50 evenementen met de hand nakijken.', 'De lat: bij minstens 3 van de 4 een juist mailadres met bron, bij de rest een formulier of telefoonnummer, en hoogstens 1 op de 20 fout.', 'Publicaties zonder naam of met meerdere evenementen erin. Daar let de meting extra op.']]];
   const beloftes = [
     ['Niets gaat vanzelf de deur uit', 'Elke mail en herinnering verstuur jij met één klik.'],
     ['Er wordt niets verzonnen', 'Een mailadres telt alleen als het echt op een website staat. De link staat erbij. Twijfel? Dan staat er "bellen" of "checken".'],
     [`Je mail blijft van jou ${NTB}`, 'RekRadar ziet alleen wie antwoordde en wanneer, nooit wat erin staat. Antwoorden uit Outlook zien is nog niet gebouwd.'],
     ['Geen klantenlijst nodig', 'Alles komt uit openbare bronnen. Privé-adressen van mensen worden nooit gemaild.']];
-  const kosten = [['Database en nachtwerk', 'Supabase, servers in Frankfurt (EU)', '$25 per maand'],
-    ['AI die vergunningen en websites leest', 'Claude, van Anthropic', 'enkele euro\'s, grens op €20'],
-    ['Zoeken op internet', 'Serper (Google) en Brave', '$50 voor 50.000 zoekopdrachten, Brave gratis'],
-    ['Bevestigingen en weekmail', 'Resend', 'gratis tot 3.000 per maand'],
-    ['Aanbodmails', 'Je eigen Outlook', 'zit al in je Microsoft 365'],
-    [`iDEAL-betalingen ${NTB}`, 'Mollie', '€0,32 per betaling']];
-  const dag = HENK
-    ? [['vandaag', 'Vandaag', 'Kijk wat er moet. Begin altijd hier.'], ['evenementen', 'Alle evenementen', 'Alles wat RekRadar vond, ook wat nog geen mail kreeg.'], ['agenda', 'Agenda', 'Wat er geleverd moet worden.']]
-    : [['overzicht', 'Overzicht', 'Kijk wat er moet. Begin altijd hier.'], ['werklijst', 'Werklijst', 'Lees de klaarstaande mails na en verstuur ze.'], ['klanten', 'Klanten', 'Zie wie antwoordde en wie boekte.']];
-  return `${paginakop('werkwijze', { doel: 'Wat RekRadar voor je doet, wat het oplevert en wat het kost.' })}
+  return `${paginakop('werkwijze', { doel: 'Hoe RekRadar evenementen vindt en aan de organisator komt, en hoe zeker dat is.' })}
 <div class="inhoud zw">
-<section class="zw-held"><p class="zw-groot">RekRadar zoekt elke nacht evenementen die fietsenrekken nodig hebben, en zet een mail voor je klaar.</p><p>Jij klikt op versturen. De rest blijft zoals je gewend bent.</p></section>
+<section class="zw-held"><p class="zw-groot">RekRadar leest elke nacht alle evenementenvergunningen van Nederland en zoekt bij elk evenement de organisator en een mailadres.</p><p>Hieronder stap voor stap hoe dat gaat, en hoe zeker elke stap is.</p></section>
 
-<div class="zw-geld">
-<div class="zw-tegel"><span>Wat het kost</span><b>± ${euro(KOSTEN)}</b><small>per maand, alles samen</small></div>
-<div class="zw-tegel"><span>Wat één boeking oplevert</span><b>${euro(klein)} – ${euro(groot)}</b><small>${euro(PRIJS_BOK)} per ${REKKEN_BOK} rekken, excl. btw</small></div>
-<div class="zw-som"><b>De som:</b> één boeking van ${REKKEN_BOK} rekken (${euro(PRIJS_BOK)}) betaalt ruim ${maanden} maanden RekRadar.<small>Hoeveel boekingen het echt oplevert, weten we pas na een paar weken versturen. Daarom hier geen belofte.</small></div>
-</div>
+<div class="zp-kop"><h2 class="zw-kop">Van vergunning tot mailadres</h2>
+<ul class="zp-legenda" aria-label="Wie doet wat">${Object.entries(WIE).map(([k, w]) => `<li class="wie-${k}"><i></i>${w}</li>`).join('')}</ul></div>
+<div class="zp">${plan}</div>
+<p class="zw-klein">De voorbeelden rechts komen uit de demo; de organisaties en mailadressen zijn verzonnen.</p>
 
-<h2 class="zw-kop">Hoe het werkt</h2>
-<ol class="zw-stappen">${stappen.map(([ic, wanneer, wat, uitleg], i) => `<li><span class="zw-ic">${ic}</span><span class="zw-wanneer">${i + 1} · ${wanneer}</span><b>${wat}</b><p>${uitleg}</p></li>`).join('')}</ol>
-
-<h2 class="zw-kop">Wat het je oplevert</h2>
-<div class="zw-vgl" role="table" aria-label="Zonder en met RekRadar">
-<div class="zw-vgl-kop" role="row"><span role="columnheader"></span><span role="columnheader">Nu</span><span role="columnheader">Met RekRadar</span></div>
-${verschil.map(([w, nu, met]) => `<div class="zw-vgl-rij" role="row"><b role="rowheader">${w}</b><span role="cell" class="nu">${nu}</span><span role="cell" class="met">${met}</span></div>`).join('')}
-</div>
-
-<h2 class="zw-kop">Wat gebeurt er 's nachts?</h2>
-<ol class="zw-nacht">${nacht.map(([t, u]) => `<li><b>${t}</b><p>${u}</p></li>`).join('')}</ol>
-<p class="zw-klein">De AI die meeleest heet Claude (van Anthropic). Die leest de vergunning en de gevonden webpagina's en wijst het mailadres aan. Hij leest nooit je mail en verstuurt niets.</p>
+<h2 class="zw-kop">Hoe zeker is het?</h2>
+<div class="zw-zeker">${zeker.map(([t, k, l]) => `<section class="zz zz-${k}"><h3>${t}</h3><ul>${l.map((x) => `<li>${x}</li>`).join('')}</ul></section>`).join('')}</div>
 
 <h2 class="zw-kop">Waar je op kunt rekenen</h2>
 <ul class="zw-belofte">${beloftes.map(([t, u]) => `<li><b>${t}</b><span>${u}</span></li>`).join('')}</ul>
 
-<h2 class="zw-kop">Je dag in drie stappen</h2>
-<ol class="zw-dag">${dag.map(([k, m, u]) => `<li>${ga(k, m)}<span>${u}</span></li>`).join('')}</ol>
-
-<details class="zw-meer"><summary>Waar gaat de ${euro(KOSTEN)} per maand heen?</summary>
-<table class="mini">${kosten.map(([wat, wie, p]) => `<tr><td><b>${wat}</b><br><span class="mu">${wie}</span></td><td class="num">${p}</td></tr>`).join('')}</table>
-<p class="zw-klein">Alle accounts komen op naam van Fietsenrekhuren.com, zodat jij eigenaar bent. De iDEAL-kosten betaal je alleen per boeking.</p></details>
 <details class="zw-meer"><summary>Overige afspraken</summary><ul class="inzicht">
 <li>Onder elke mail staat een afmeldlink. Wie zich afmeldt, krijgt nooit meer een aanbod.</li>
-<li>Bouwprojecten krijgen geen mail: jij belt. De prijs voor lange huur is nog niet afgesproken.</li>
-<li>Facturen maak je zoals nu in je eigen boekhouding.</li>
+<li>Bouwprojecten krijgen geen mail: jij belt.</li>
 <li>Alleen Nederland. Duitsland en België nog niet.</li>
 <li>Bron van de vergunningen: <a href="https://zoek.officielebekendmakingen.nl" target="_blank" rel="noopener">officielebekendmakingen.nl ↗</a></li></ul></details>
 </div>`;
