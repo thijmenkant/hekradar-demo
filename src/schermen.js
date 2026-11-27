@@ -386,20 +386,80 @@ ${V.facturen.length ? `<div class="scrollx"><table class="mini" style="min-width
 // ZO WERKT HET
 // =====================================================================
 function werkwijzeScherm() {
-  const r = [['Vinden', 'Elke nacht leest HekRadar alle nieuwe vergunningen in het Gemeenteblad en zoekt de organisator met een mailadres.', 'Een klant kent je via je netwerk. Wie jou niet kent, belt je niet.'],
-    ['Aanbod', 'De mail staat klaar in de Werklijst. Jij kijkt na en verstuurt met één klik uit je eigen Outlook. Niets gaat vanzelf de deur uit.', 'Jij antwoordt met prijs en voorstel.'],
-    ['Afspraken', 'De klant antwoordt in je Outlook, of boekt zelf: aantal, loslocatie, contact op de dag en betalen (iDEAL of factuur).', 'Mails heen en weer over aantal en loslocatie.'],
+  const v = (m) => `<button class="link" data-v="${Object.keys(MODULES).find((k) => MODULES[k].naam === m)}">${m}</button>`;
+  const KOSTEN = 41, klein = 0.5 * PRIJS_BOK, groot = 4 * PRIJS_BOK, perDag = Math.round(SCAN.publicaties / 14);
+  const r = [['Vinden', 'Elke nacht leest HekRadar alle nieuwe evenementvergunningen in Nederland. Daarna zoekt hij wie het organiseert en hoe je die mailt.', 'Klanten kennen je via je netwerk. Wie jou niet kent, belt je niet.'],
+    ['Aanbod', 'De mail staat klaar in de Werklijst. Jij leest hem na en verstuurt met één klik uit je eigen Outlook.', 'Jij antwoordt met prijs en voorstel.'],
+    ['Afspraken', 'De klant antwoordt in je Outlook, of boekt zelf: aantal rekken, losplek op de kaart, contact op de dag, betalen.', 'Mails heen en weer over aantal en losplek.'],
     ['Uitvoeren', 'De klus staat in Planning. Je levert zoals nu. Volgend jaar staat de mail 120 dagen vooraf weer klaar.', 'Jij plant, levert en factureert.']];
-  const waar = [['Overzicht', 'Wat vandaag aandacht vraagt. Begin hier.'], ['Werklijst', 'Mails versturen, op volgorde van kans.'], ['Evenementen', 'Alles zoeken en filteren.'], ['Bouw en verbouw', 'Bellijst voor lange huur bij bouwprojecten.'], ['Klanten', 'Wie een aanbod kreeg: antwoorden, herinneren, boekingen.'], ['Planning', 'Geboekte leveringen per week.'], ['Markt', 'Echte cijfers uit het Gemeenteblad.'], ['Resultaten', 'Omzet, conversie en openstaande facturen.']];
-  return `${paginakop('werkwijze', { doel: 'Je Outlook blijft je Outlook. Je hoeft niets nieuws te leren.' })}
-<div class="inhoud"><div class="stroom">${r.map(([s, b, n], i) => `<div><h3><em>${i + 1}</em>${s}</h3><p>${b}</p><p class="nu">Nu: ${n}</p></div>`).join('')}</div>
-<div class="raster" style="margin-top:16px">
-<section class="blok s7"><div class="blok-kop"><h2>Waar vind je wat</h2></div><table class="mini">${waar.map(([m, u]) => `<tr><td style="width:150px"><button class="link" data-v="${Object.keys(MODULES).find((k) => MODULES[k].naam === m)}">${m}</button></td><td>${u}</td></tr>`).join('')}</table></section>
+  // De keten zoals de echte tool hem draait (zie HANDLEIDING.md van HekRadar 2.0).
+  const keten = [['HekRadar', 'Gemeenteblad lezen', 'Elke nacht om 03:15: nieuwe vergunningen, aanvragen en verkeersbesluiten voor evenementen.'],
+    ['HekRadar + Claude', 'Organisator zoeken', 'Vergunningtekst, vorige jaren, Google en de eigen website. Claude leest mee en wijst het mailadres aan.'],
+    ['HekRadar', 'Kans berekenen', 'Dichtbij, groot, vaste klant: hoger. Ver weg of geen contact: lager. Beste kans bovenaan.'],
+    ['Jij', 'Nalezen en versturen', 'In de Werklijst. Eén klik en de mail gaat uit jouw Outlook, met jouw naam.'],
+    ['Klant', 'Antwoorden of boeken', 'Antwoord komt in je inbox. Of de klant vult het boekformulier in en betaalt.'],
+    ['Jij', 'Leveren', 'De klus staat in Planning, met losplek en contact op de dag.']];
+  const bronnen = [['Gemeenteblad', 'Nieuwe evenementvergunningen in heel Nederland. Openbaar, van de overheid.', '<a href="https://zoek.officielebekendmakingen.nl" target="_blank" rel="noopener">officielebekendmakingen.nl ↗</a>'],
+    ['Vorige jaren', 'Was het er vorig jaar ook? Wie organiseerde het toen? (Gemeenteblad en Staatscourant)', ''],
+    ['Google en Brave', 'Website, lokaal nieuws, evenementenkalenders, sportbond, Facebook-pagina van de organisator.', ''],
+    ['Website organisator', 'De contact- of privacypagina: daar staat meestal het mailadres.', ''],
+    ['Je contactenboek', 'Organisaties die je al kent. Die gaan voor.', ''],
+    ['PDOK (overheid)', 'Kaart en luchtfoto in het boekformulier, voor de losplek.', ''],
+    ['Je Outlook', 'Alleen wie antwoordde en wanneer. Nooit de inhoud van een mail.', '']];
+  const kosten = [['Supabase', 'De database en het werk dat \'s nachts draait. Servers in Frankfurt.', '$25 per maand'],
+    ['Claude (Anthropic)', 'Leest vergunningen en webpagina\'s.', 'enkele euro\'s per maand, grens op €20'],
+    ['Serper (Google)', 'Zoekopdrachten.', '$50 voor 50.000 zoekopdrachten'],
+    ['Brave', 'Tweede zoekmachine.', 'gratis tegoed'],
+    ['Resend', 'Bevestigingen en de weekmail (niet de aanbodmails).', 'gratis tot 3.000 per maand'],
+    ['Outlook', 'Aanbodmails, uit jouw eigen mailbox.', 'zit al in je Microsoft 365'],
+    ['Mollie', 'iDEAL-betalingen.', '€0,32 per betaling']];
+  const dagje = [['Overzicht', 'Kijk wat vandaag moet. Begin altijd hier.'], ['Werklijst', 'Lees de klaarstaande mails na en verstuur ze. Beste kans bovenaan.'], ['Klanten', 'Zie wie antwoordde, wie je kunt herinneren en wie boekte. Antwoorden doe je gewoon in Outlook.'], ['Planning', 'Wat er deze week geleverd moet worden.'], ['Bouw en verbouw', 'Af en toe: bouwprojecten om te bellen voor lange huur.']];
+  const waar = [['Evenementen', 'Alles zoeken en filteren, ook wat nog niet in de Werklijst staat.'], ['Markt', 'Echte cijfers uit het Gemeenteblad: waar en wanneer het druk is.'], ['Resultaten', 'Omzet, hoeveel mails een boeking werden, openstaande facturen.'], ['Instellingen', 'Prijzen, pakketten en de regels voor de kansscore.']];
+  const rij = (l) => l.map(([m, u]) => `<tr><td style="width:150px">${v(m)}</td><td>${u}</td></tr>`).join('');
+  return `${paginakop('werkwijze', { doel: 'HekRadar zoekt \'s nachts nieuwe klanten voor je. Jij beslist en verstuurt. Je Outlook blijft je Outlook.' })}
+<div class="inhoud"><div class="raster">
+<div class="s12 cijferband">
+<div><span>Kost</span><b>± ${euro(KOSTEN)}</b><small>per maand, alle systemen samen</small></div>
+<div><span>Eén boeking</span><b>${euro(klein)} – ${euro(groot)}</b><small>${euro(PRIJS_BOK)} per bok van ${REKKEN_BOK} rekken, excl. btw</small></div>
+<div><span>Gelezen vannacht</span><b>${SCAN.laatsteDagAantal}</b><small>publicaties uit het Gemeenteblad</small></div>
+<div><span>Vanzelf verstuurd</span><b>0</b><small>elke mail gaat met jouw klik</small></div></div>
+<div class="s12 stroom">${r.map(([s, b, n], i) => `<div><h3><em>${i + 1}</em>${s}</h3><p>${b}</p><p class="nu">Nu: ${n}</p></div>`).join('')}</div>
+
+<section class="blok s12"><div class="blok-kop"><h2>Hoe HekRadar in elkaar zit</h2><span class="tel">van vergunning tot levering</span></div>
+<div class="keten">${keten.map(([w, t, u]) => `<div class="${w === 'Jij' ? 'jij' : w === 'Klant' ? 'klant' : ''}"><span class="wie">${w}</span><b>${t}</b><p>${u}</p></div>`).join('')}</div>
+<div class="blok-voet">Alles staat in één database bij Supabase in Frankfurt (EU). Accounts komen op naam van Fietsenrekhuren.com, zodat jij eigenaar bent.</div></section>
+
+<section class="blok s7"><div class="blok-kop"><h2>Waar komt de informatie vandaan</h2></div><table class="mini">${bronnen.map(([b, u, l]) => `<tr><td style="width:150px"><b>${b}</b></td><td>${u}${l ? ` ${l}` : ''}</td></tr>`).join('')}</table>
+<div class="blok-voet">Alles is openbaar te vinden. Een eigen klantenlijst is niet nodig.</div></section>
+<section class="blok s5"><div class="blok-kop"><h2>Wat doet Claude?</h2><span class="tel">de AI in HekRadar</span></div><div class="blok-in">
+<p style="margin:0 0 10px;font-size:13px">Claude (Claude Haiku, van Anthropic) is een AI die tekst leest. HekRadar haalt de vergunning en de gevonden webpagina's op; Claude leest ze en wijst aan wie de organisator is en welk mailadres erbij hoort.</p>
+<ul class="inzicht">
+<li>Claude verzint niets. Een mailadres telt alleen als het letterlijk op een gevonden pagina staat. De link naar die pagina staat erbij.</li>
+<li>Twijfel? Dan staat er <b>mailadres checken</b>. Alleen een telefoonnummer of formulier? Dan staat er <b>bellen</b>.</li>
+<li>Privé-adressen van personen worden nooit gemaild.</li>
+<li>Claude leest je mail niet. Versturen doe jij.</li></ul></div></section>
+
+<section class="blok s6"><div class="blok-kop"><h2>Wat kost het</h2><span class="tel">± ${euro(KOSTEN)} per maand</span></div><table class="mini">${kosten.map(([d, u, p]) => `<tr><td style="width:42%"><b>${d}</b><br><span class="mu">${p}</span></td><td>${u}</td></tr>`).join('')}</table>
+<div class="blok-voet">Kosten van de systemen die HekRadar gebruikt. De iDEAL-kosten gaan per boeking.</div></section>
+<section class="blok s6"><div class="blok-kop"><h2>Wat het je elke dag oplevert</h2></div><div class="blok-in"><ul class="inzicht">
+<li><b>Nieuwe evenementen zonder zoeken.</b> In twee weken las HekRadar ${SCAN.publicaties.toLocaleString('nl-NL')} publicaties uit ${SCAN.gemeenten} gemeenten: gemiddeld zo'n ${perDag} per dag.</li>
+<li><b>Organisator en mailadres al gevonden</b>, met de bron erbij.</li>
+<li><b>De mail staat klaar.</b> Nalezen, één klik, klaar.</li>
+<li><b>Je ziet wie antwoordde</b> en wie je kunt herinneren.</li>
+<li><b>Klanten boeken en betalen zelf</b>: minder mailen over aantal en losplek.</li>
+<li><b>Vaste klanten komen terug</b>: 120 dagen voor de volgende editie staat de mail weer klaar.</li></ul>
+<div class="noot vast"><b>Rekensom.</b> De kleinste boeking (een halve bok, ${REKKEN_BOK / 2} rekken) is ${euro(klein)}. Eén kleine boeking per maand betaalt de systemen dus ruim drie keer.</div>
+<div class="noot">Hoeveel boekingen het echt oplevert, weten we pas na een paar weken echt versturen. Daarom hier geen belofte.</div></div></section>
+
+<section class="blok s7"><div class="blok-kop"><h2>Je dag met HekRadar</h2></div><table class="mini">${rij(dagje)}</table>
+<div class="blok-voet">Verder: ${waar.map(([m, u]) => `${v(m)} (${u.charAt(0).toLowerCase() + u.slice(1, -1)})`).join(' · ')}.</div></section>
 <section class="blok s5"><div class="blok-kop"><h2>Afspraken</h2></div><div class="blok-in"><ul class="inzicht">
-<li>HekRadar verstuurt nooit zelf. Elke mail en herinnering gaat met één klik van Henk.</li>
-<li>Bouwprojecten krijgen geen mail: Henk belt.</li>
-<li>Kosten: ongeveer €41 per maand voor de systemen. Een boeking is €150 tot €1.200.</li>
-<li>Wat het oplevert weten we pas na een paar weken echt versturen.</li></ul></div></section></div></div>`;
+<li>HekRadar verstuurt nooit zelf. Elke mail en herinnering gaat met één klik van jou.</li>
+<li>Onder elke mail staat een afmeldlink. Wie zich afmeldt, krijgt nooit meer een aanbod.</li>
+<li>Bouwprojecten krijgen geen mail: jij belt. De prijs voor lange huur is nog niet afgesproken.</li>
+<li>Facturen maak je zoals nu in je eigen boekhouding.</li>
+<li>Alleen Nederland. Duitsland en België nog niet.</li></ul></div></section>
+</div></div>`;
 }
 
 // =====================================================================

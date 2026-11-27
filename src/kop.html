@@ -419,6 +419,17 @@ details.meer-inst[open] > summary::before { content: '▾ '; }
 .stroom h3 em { font-style: normal; font: 700 11px/1 var(--tekst); background: var(--x-inkt); color: #fff; padding: 4px 6px; border-radius: 2px; }
 .stroom p { margin: 0; font-size: 13px; color: var(--ink2); }
 .stroom .nu { font-size: 12px; color: var(--ink3); border-top: 1px dashed var(--lijn); margin-top: 10px; padding-top: 8px; }
+.keten { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.keten > div { position: relative; padding: 12px 14px 14px; border-left: 1px solid var(--lijn); }
+.keten > div:first-child { border-left: 0; }
+.keten > div + div::before { content: '→'; position: absolute; left: -7px; top: 11px; background: var(--vlak); color: var(--ink3); font-size: 12px; line-height: 1; padding: 2px 0; }
+.keten > div.jij { background: var(--x-titelvlak); }
+.keten > div.jij + div::before, .keten > div + div.jij::before { background: var(--x-titelvlak); }
+.keten .wie { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); }
+.keten .jij .wie { color: var(--x-zacht-tekst); }
+.keten .klant .wie { color: var(--let-tekst); }
+.keten b { display: block; font: 600 13px/1.25 var(--merk); color: var(--x-titel); margin: 4px 0 6px; }
+.keten p { margin: 0; font-size: 12.5px; color: var(--ink2); }
 
 /* ================= DETAILPANEEL ================= */
 .paneel { background: var(--vlak); border-left: 1px solid var(--lijn2); height: 100%; min-height: 0; display: flex; flex-direction: column; min-width: 0; outline: none; }
@@ -732,6 +743,10 @@ details.meer-inst[open] > summary::before { content: '▾ '; }
   .stroom { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stroom > div:nth-child(3) { border-left: 0; }
   .stroom > div:nth-child(n+3) { border-top: 1px solid var(--lijn); }
+  .keten { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .keten > div:nth-child(4) { border-left: 0; }
+  .keten > div:nth-child(4)::before { display: none; }
+  .keten > div:nth-child(n+4) { border-top: 1px solid var(--lijn); }
   .gebruiker .gnaam { display: none; }
 }
 /* ================= TELEFOON ================= */
@@ -845,6 +860,10 @@ details.meer-inst[open] > summary::before { content: '▾ '; }
   .stroom { grid-template-columns: minmax(0, 1fr); margin: 0 -12px; border-radius: 0; }
   .stroom > div { border-left: 0 !important; border-top: 1px solid var(--lijn); }
   .stroom > div:first-child { border-top: 0; }
+  .keten { grid-template-columns: minmax(0, 1fr); }
+  .keten > div { border-left: 0; border-top: 1px solid var(--lijn); }
+  .keten > div:first-child { border-top: 0; }
+  .keten > div + div::before { display: none; }
   .naast .paneel, .drawer .paneel, .paneel { width: 100vw; box-shadow: none; z-index: 55; }
   .p-voet { flex-wrap: wrap; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
   .p-voet > .btn { flex: 1 1 100%; }
