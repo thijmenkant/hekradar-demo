@@ -279,7 +279,7 @@ function bouwScherm() {
   const V = voorraad(), metPeriode = [...V.bouwBellen, ...V.bouwGebeld].filter((x) => x.datum).length;
   const kop = `<div class="tr th tl-kop" role="row"><div>Project</div><div class="c-wie">Wie bellen</div><div>Afstand</div><div class="c-tl">${tlAs('')}</div><div class="c-st">Status</div></div>`;
   const groep = (t, u, l) => l.length ? `<div class="groepsrij">${t} <span>${l.length} · ${u}</span></div>${l.map(bouwRij).join('')}` : '';
-  return `${paginakop('bouw', { tabs: evTabs(), doel: 'Echte projecten uit het Gemeenteblad (12 maanden) met een tijdelijke fietsenstalling. Lange huur; Henk belt, HekRadar mailt hier niet.', extra: `<div class="kern"><div><span>Te bellen</span><b>${V.bouwBellen.length}</b></div><div><span>Met bekende periode</span><b>${metPeriode}</b></div><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron echt">echt</span></b></div></div>` })}
+  return `${paginakop('bouw', { tabs: evTabs(), doel: 'Echte projecten uit het Gemeenteblad (12 maanden) met een tijdelijke fietsenstalling. Lange huur; Henk belt, RekRadar mailt hier niet.', extra: `<div class="kern"><div><span>Te bellen</span><b>${V.bouwBellen.length}</b></div><div><span>Met bekende periode</span><b>${metPeriode}</b></div><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron echt">echt</span></b></div></div>` })}
 <div class="inhoud"><section class="blok"><div class="werkbalk"><p class="uitleg">Balk = huurperiode volgens de publicatie.</p><div class="rechts">${afstandFilter()}</div></div>
 <div class="tl" role="table" aria-label="Bouwprojecten">${kop}
 ${groep('Te bellen', 'nog geen contact', V.bouwBellen)}${groep('Gebeld of later', 'opvolgen', V.bouwGebeld)}${groep('Afgelopen', 'goed om te weten wie dit doet', V.bouwAf)}
@@ -320,7 +320,7 @@ function klantenScherm() {
 <div class="t-kl" role="table" aria-label="Klanten"><div class="tr th" role="row"><div>Klant</div><div>Fase</div><div>Datum</div><div class="c-rek" style="text-align:right">Rekken</div><div style="text-align:right">Bedrag</div><div class="c-bet">Betaling</div><div class="c-act"></div></div>
 ${l.length ? l.map(klRij).join('') : leeg('Niets in deze fase.')}</div><div class="blok-voet">${t[3]}</div></section>`;
   }
-  return `${paginakop('klanten', { doel: `Iedereen die via HekRadar een aanbod kreeg, ${esc(regioTekst())}.`, extra: kern })}
+  return `${paginakop('klanten', { doel: `Iedereen die via RekRadar een aanbod kreeg, ${esc(regioTekst())}.`, extra: kern })}
 <div class="inhoud"><section class="blok" style="margin-bottom:12px">${balk}</section>${inh}</div>`;
 }
 
@@ -395,10 +395,10 @@ function resultatenScherm() {
   const piekO = Math.max(...reeks.map(([, n]) => n), 1), stapO = piekO <= 2000 ? 500 : 1000, maxO = Math.ceil(piekO / stapO) * stapO;
   const bw = (w) => geboekt.filter((x) => x.boeking && x.boeking.betaling === w);
   const hb = (l) => { const m = Math.max(...l.map(([, n]) => n), 1); return `<div class="hbars">${l.map(([s, n]) => `<span>${s}</span><span class="bar"><i style="width:${n / m * 100}%"></i></span><span class="v">${n}</span>`).join('')}</div>`; };
-  return `${paginakop('resultaten', { doel: 'Wat HekRadar oplevert. Deze cijfers zijn demo-gegevens; de echte komen na een paar weken versturen.', extra: '<div class="kern"><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron demo">demo</span></b></div></div>' })}
+  return `${paginakop('resultaten', { doel: 'Wat RekRadar oplevert. Deze cijfers zijn demo-gegevens; de echte komen na een paar weken versturen.', extra: '<div class="kern"><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron demo">demo</span></b></div></div>' })}
 <div class="inhoud"><div class="raster">
 <div class="s12 cijferband">
-<div><span>Omzet via HekRadar</span><b>${euro(omzet)}</b><small>${geboekt.length} boekingen</small></div>
+<div><span>Omzet via RekRadar</span><b>${euro(omzet)}</b><small>${geboekt.length} boekingen</small></div>
 <div><span>Gemiddelde boeking</span><b>${euro(geboekt.length ? Math.round(omzet / geboekt.length) : 0)}</b><small>excl. btw</small></div>
 <div><span>Reactie op aanbod</span><b>${pct(reageerde.length, aanbod.length)}</b><small>${reageerde.length} van ${aanbod.length}</small></div>
 <div><span>Aanbod naar boeking</span><b>${pct(geboekt.length, aanbod.length)}</b><small>${geboekt.length} van ${aanbod.length}</small></div>
@@ -421,23 +421,23 @@ function werkwijzeScherm() {
   const maanden = Math.floor(PRIJS_BOK / KOSTEN);
   const MAAN = I('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
   const stappen = [
-    [MAAN, '\'s Nachts', 'HekRadar zoekt', `Hij leest alle nieuwe evenementvergunningen van Nederland (zo'n ${perDag} per dag) en zoekt bij elk evenement wie het organiseert en hoe je die mailt.`],
+    [MAAN, '\'s Nachts', 'RekRadar zoekt', `Hij leest alle nieuwe evenementvergunningen van Nederland (zo'n ${perDag} per dag) en zoekt bij elk evenement wie het organiseert en hoe je die mailt.`],
     [ICON.mail, '\'s Ochtends', 'Jij kijkt en klikt', 'De mails staan klaar, beste kans bovenaan. Je leest ze na en verstuurt met één klik uit je eigen Outlook, met jouw naam.'],
     [ICON.kalender, 'Daarna', 'De klant boekt', 'De klant antwoordt in je Outlook, of boekt zelf: aantal rekken, losplek op de kaart en betalen. De klus staat in je planning.']];
   const verschil = [
-    ['Nieuwe klanten', 'Komen via je netwerk. Wie jou niet kent, belt je niet.', 'HekRadar vindt evenementen in heel Nederland, ook bij organisatoren die jou nog niet kennen.'],
+    ['Nieuwe klanten', 'Komen via je netwerk. Wie jou niet kent, belt je niet.', 'RekRadar vindt evenementen in heel Nederland, ook bij organisatoren die jou nog niet kennen.'],
     ['Aanbod sturen', 'Zelf een mail schrijven met prijs en voorstel.', 'De mail staat klaar. Nalezen en op versturen klikken.'],
     ['Afspraken maken', 'Mails heen en weer over aantal en losplek.', 'De klant vult het zelf in en wijst de losplek aan op de kaart.'],
     ['Vaste klanten', 'Zelf onthouden wie je volgend jaar weer moet mailen.', '120 dagen voor het evenement staat de mail vanzelf weer klaar.']];
   const nacht = [
     ['De overheid publiceert', 'Elke gemeente zet vergunningen voor evenementen openbaar in het Gemeenteblad.'],
-    ['HekRadar leest alles', 'Elke nacht om 03:15. Vannacht waren het er ' + SCAN.laatsteDagAantal + '.'],
+    ['RekRadar leest alles', 'Elke nacht om 03:15. Vannacht waren het er ' + SCAN.laatsteDagAantal + '.'],
     ['Zoekt de organisator', 'In de vergunning, vorige jaren, Google en de website van de organisator. Daar staat het mailadres.'],
     ['Rekent de kans uit', 'Dichtbij, groot of vaste klant: hoger. Ver weg of geen contact: lager.']];
   const beloftes = [
     ['Niets gaat vanzelf de deur uit', 'Elke mail en herinnering verstuur jij met één klik.'],
     ['Er wordt niets verzonnen', 'Een mailadres telt alleen als het echt op een website staat. De link staat erbij. Twijfel? Dan staat er "bellen" of "checken".'],
-    ['Je mail blijft van jou', 'HekRadar ziet alleen wie antwoordde en wanneer, nooit wat erin staat.'],
+    ['Je mail blijft van jou', 'RekRadar ziet alleen wie antwoordde en wanneer, nooit wat erin staat.'],
     ['Geen klantenlijst nodig', 'Alles komt uit openbare bronnen. Privé-adressen van mensen worden nooit gemaild.']];
   const kosten = [['Database en nachtwerk', 'Supabase, servers in Frankfurt (EU)', '$25 per maand'],
     ['AI die vergunningen en websites leest', 'Claude, van Anthropic', 'enkele euro\'s, grens op €20'],
@@ -446,24 +446,24 @@ function werkwijzeScherm() {
     ['Aanbodmails', 'Je eigen Outlook', 'zit al in je Microsoft 365'],
     ['iDEAL-betalingen', 'Mollie', '€0,32 per betaling']];
   const dag = HENK
-    ? [['vandaag', 'Vandaag', 'Kijk wat er moet. Begin altijd hier.'], ['evenementen', 'Alle evenementen', 'Alles wat HekRadar vond, ook wat nog geen mail kreeg.'], ['agenda', 'Agenda', 'Wat er geleverd moet worden.']]
+    ? [['vandaag', 'Vandaag', 'Kijk wat er moet. Begin altijd hier.'], ['evenementen', 'Alle evenementen', 'Alles wat RekRadar vond, ook wat nog geen mail kreeg.'], ['agenda', 'Agenda', 'Wat er geleverd moet worden.']]
     : [['overzicht', 'Overzicht', 'Kijk wat er moet. Begin altijd hier.'], ['werklijst', 'Werklijst', 'Lees de klaarstaande mails na en verstuur ze.'], ['klanten', 'Klanten', 'Zie wie antwoordde en wie boekte.']];
-  return `${paginakop('werkwijze', { doel: 'Wat HekRadar voor je doet, wat het oplevert en wat het kost.' })}
+  return `${paginakop('werkwijze', { doel: 'Wat RekRadar voor je doet, wat het oplevert en wat het kost.' })}
 <div class="inhoud zw">
-<section class="zw-held"><p class="zw-groot">HekRadar zoekt elke nacht evenementen die fietsenrekken nodig hebben, en zet een mail voor je klaar.</p><p>Jij klikt op versturen. De rest blijft zoals je gewend bent.</p></section>
+<section class="zw-held"><p class="zw-groot">RekRadar zoekt elke nacht evenementen die fietsenrekken nodig hebben, en zet een mail voor je klaar.</p><p>Jij klikt op versturen. De rest blijft zoals je gewend bent.</p></section>
 
 <div class="zw-geld">
 <div class="zw-tegel"><span>Wat het kost</span><b>± ${euro(KOSTEN)}</b><small>per maand, alles samen</small></div>
 <div class="zw-tegel"><span>Wat één boeking oplevert</span><b>${euro(klein)} – ${euro(groot)}</b><small>${euro(PRIJS_BOK)} per ${REKKEN_BOK} rekken, excl. btw</small></div>
-<div class="zw-som"><b>De som:</b> één boeking van ${REKKEN_BOK} rekken (${euro(PRIJS_BOK)}) betaalt ruim ${maanden} maanden HekRadar.<small>Hoeveel boekingen het echt oplevert, weten we pas na een paar weken versturen. Daarom hier geen belofte.</small></div>
+<div class="zw-som"><b>De som:</b> één boeking van ${REKKEN_BOK} rekken (${euro(PRIJS_BOK)}) betaalt ruim ${maanden} maanden RekRadar.<small>Hoeveel boekingen het echt oplevert, weten we pas na een paar weken versturen. Daarom hier geen belofte.</small></div>
 </div>
 
 <h2 class="zw-kop">Hoe het werkt</h2>
 <ol class="zw-stappen">${stappen.map(([ic, wanneer, wat, uitleg], i) => `<li><span class="zw-ic">${ic}</span><span class="zw-wanneer">${i + 1} · ${wanneer}</span><b>${wat}</b><p>${uitleg}</p></li>`).join('')}</ol>
 
 <h2 class="zw-kop">Wat het je oplevert</h2>
-<div class="zw-vgl" role="table" aria-label="Zonder en met HekRadar">
-<div class="zw-vgl-kop" role="row"><span role="columnheader"></span><span role="columnheader">Nu</span><span role="columnheader">Met HekRadar</span></div>
+<div class="zw-vgl" role="table" aria-label="Zonder en met RekRadar">
+<div class="zw-vgl-kop" role="row"><span role="columnheader"></span><span role="columnheader">Nu</span><span role="columnheader">Met RekRadar</span></div>
 ${verschil.map(([w, nu, met]) => `<div class="zw-vgl-rij" role="row"><b role="rowheader">${w}</b><span role="cell" class="nu">${nu}</span><span role="cell" class="met">${met}</span></div>`).join('')}
 </div>
 
@@ -497,10 +497,10 @@ function instellingenScherm() {
   const blok = (id, t, inh) => `<section class="blok" id="${id}"><div class="blok-kop"><h2>${t}</h2></div>${inh}</section>`;
   const pak = [['Sint-intocht, kerstmarkt', 0.5], ['Loop, markt, carnaval, dorpsfeest', 1], ['Sportevenement, festival', 2], ['Groot (5.000+ bezoekers)', 4]];
   const secs = [['s-prijs', 'Prijs en pakket'], ['s-versturen', 'Versturen'], ['s-planning', 'Planning'], ['s-betalen', 'Betalen'], ['s-kans', 'Kansscore']];
-  return `${paginakop('instellingen', { doel: 'Prijzen en regels die HekRadar gebruikt. Aannames staan erbij: samen met Henk vaststellen.', acties: '<span class="mu klein" id="opstatus">Geen wijzigingen</span><button class="btn p" data-a="opslaan" id="opknop" disabled>Opslaan</button>' })}
+  return `${paginakop('instellingen', { doel: 'Prijzen en regels die RekRadar gebruikt. Aannames staan erbij: samen met Henk vaststellen.', acties: '<span class="mu klein" id="opstatus">Geen wijzigingen</span><button class="btn p" data-a="opslaan" id="opknop" disabled>Opslaan</button>' })}
 <div class="inhoud"><div class="inst"><nav class="inst-nav" aria-label="Secties">${secs.map(([id, n], i) => `<a href="#${id}" data-sec="${id}" class="${i === 0 ? 'on' : ''}">${n}</a>`).join('')}</nav><div>
 ${blok('s-prijs', 'Prijs en pakket', veld('i1', 'Prijs per bok (50 rekken)', '€300 excl. btw', 'Aanname. Transport, leveren en ophalen zitten in de prijs.') + `<table class="mini" style="border-top:1px solid var(--lijn)"><tr><th>Soort evenement</th><th>Voorstel</th><th class="num">Rekken</th><th class="num">Prijs</th></tr>${pak.map(([n, b]) => `<tr><td>${n}</td><td>${bokTekst(b)}</td><td class="num">${b * REKKEN_BOK}</td><td class="num">${euro(b * PRIJS_BOK)}</td></tr>`).join('')}</table>`)}
-${blok('s-versturen', 'Versturen', veld('i5', 'Afzender', 'Henk van der Zouwen · Outlook') + veld('i2', 'Versturen', '', 'HekRadar verstuurt nooit zelf.', ['Altijd via mij, één klik per mail']) + veld('i4', 'Herinnering', '', 'Eén keer, alleen als je zelf drukt.', ['Na een week, als ik op Herinnering druk']))}
+${blok('s-versturen', 'Versturen', veld('i5', 'Afzender', 'Henk van der Zouwen · Outlook') + veld('i2', 'Versturen', '', 'RekRadar verstuurt nooit zelf.', ['Altijd via mij, één klik per mail']) + veld('i4', 'Herinnering', '', 'Eén keer, alleen als je zelf drukt.', ['Na een week, als ik op Herinnering druk']))}
 ${blok('s-planning', 'Planning', veld('i10', 'Voorraad (bokken van 50 rekken)', String(VOORRAAD_BOK), 'Aanname, invullen met Henk. Rekken zijn bezet van de dag vóór tot de dag na het evenement. Het boekformulier biedt nooit meer aan dan er vrij is.') + veld('i8', 'Vaste klanten', '120 dagen voor de volgende editie de mail klaarzetten') + `<table class="mini" style="border-top:1px solid var(--lijn)"><tr><th>Werklijst: zo vroeg komt een evenement erin</th><th class="num">Dagen vooraf</th></tr>${Object.entries(BESTEL).map(([k, d]) => `<tr><td>${hoofdletter(k)}</td><td class="num">${d}</td></tr>`).join('')}</table><div class="blok-in klein mu">Besteltermijnen zijn aannames; bijstellen op echte boekingen.</div>`)}
 ${blok('s-betalen', 'Betalen', veld('i9', 'Betaalwijze', 'iDEAL of op factuur (klant kiest)') + veld('i7', 'Annuleringsregel', 'Annuleer je na betaling, dan krijg je het bedrag niet terug.', 'Aanname: nog met Henk afstemmen, ook voor boekingen op factuur.'))}
 ${blok('s-kans', 'Kansscore', `<div class="blok-in klein mu" style="padding-bottom:10px">Iedereen begint op 40. Regels zijn aannames; bijstellen zodra er genoeg aanbiedingen zijn.</div><details class="meer-inst"><summary>Toon de ${KANSREGELS.length} regels</summary><table class="mini"><tr><th>Regel</th><th class="num">Punten</th></tr>${KANSREGELS.map(([t, n]) => `<tr><td>${t}</td><td class="num ${n.startsWith('+') ? 'plus' : 'min'}">${n}</td></tr>`).join('')}</table></details>`)}
@@ -562,7 +562,7 @@ function antwoordHtml(x, keus = 0) {
 ${v.length > 1 ? `<div class="seg antw-keus" role="group" aria-label="Kies een antwoord">${v.map((a, i) => `<button type="button" data-antw="${i}" aria-pressed="${i === k}"><b>${esc(a.label)}</b></button>`).join('')}</div>` : ''}
 <div class="mail"><div class="mk"><div class="mk-label">${ICON.mail}E-mail · concept</div><span>Aan</span><b style="font-weight:500">${esc(x.org.email)}</b><span>Onderwerp</span><b style="font-weight:500">Re: Fietsenrekken voor ${esc(x.naam)}</b></div>
 <div class="mb"><textarea id="antwtekst" class="in" rows="14" aria-label="Tekst van het antwoord">${esc(v[k].tekst)}</textarea></div></div>
-<p class="kort">Vul de stukken tussen [ ] in en pas aan wat je wilt. HekRadar verstuurt niets: je verstuurt zelf vanuit Outlook.</p>
+<p class="kort">Vul de stukken tussen [ ] in en pas aan wat je wilt. RekRadar verstuurt niets: je verstuurt zelf vanuit Outlook.</p>
 <div class="antw-voet"><button class="btn p" data-a="antw-outlook" data-id="${x.id}">${ICON.mail} Openen in Outlook</button><span class="ffout" id="antwfout" role="alert"></span></div></div>`;
 }
 const kansSectie = (x) => { if (KLANT.includes(x.s)) return ''; const k = kans(x);
@@ -629,7 +629,7 @@ function bouwPaneel(x) {
 <section class="sectie"><h2>Wie bellen</h2><div class="belkaart">${ICON.bel}<div>${x.aanvrager ? `<b>${esc(x.aanvrager)}</b><span>Aanvrager uit de publicatie, waarschijnlijk de aannemer: zij regelen de bouwplaats.</span>` : `<b>Gemeente ${esc(x.gem)}, afdeling vergunningen</b><span>De aanvrager staat niet in de publicatie. Vraag de gemeente wie het project uitvoert.</span>`}</div></div></section>
 <section class="sectie"><h2>Aanpak</h2><ol class="stappenlijst"><li>Bellen: ${x.aanvrager ? esc(x.aanvrager) : 'de gemeente ' + esc(x.gem)}.</li><li>Vragen: hoeveel fietsen, hoe lang, en wie betaalt (aannemer, gemeente of school).</li>${/bouwhek/i.test(x.noot) ? '<li>Bouwhekken eromheen aanbieden: rekken en hekken in één prijs.</li>' : ''}<li>Prijs voor langere huur zelf afspreken.</li></ol></section>
 <section class="sectie"><h2>Project</h2><dl class="eig"><dt>Periode</dt><dd>${periodeKort(x)}</dd>${duurTekst(x) ? `<dt>Duur</dt><dd>${duurTekst(x)}</dd>` : ''}<dt>Soort</dt><dd>${SOORTBOUW[x.soortBouw]}</dd>${x.km != null ? `<dt>Afstand</dt><dd>${kmTekst(x)} vanaf Almkerk <span class="mu">· schatting</span></dd>` : ''}${x.pubs > 1 ? `<dt>Publicaties</dt><dd>${x.pubs} samengevoegd</dd>` : ''}<dt>Bron</dt><dd>${pubLink(x, 'publicatie bekijken')}</dd></dl></section>
-${kansSectie(x)}<p class="kort">HekRadar maakt bij bouwprojecten geen offerte en stuurt geen mail; de prijs voor langere huur is nog niet afgesproken.</p>${hulp}</div></div>
+${kansSectie(x)}<p class="kort">RekRadar maakt bij bouwprojecten geen offerte en stuurt geen mail; de prijs voor langere huur is nog niet afgesproken.</p>${hulp}</div></div>
 ${open ? `<div class="p-voet"><button class="btn p" data-a="gebeld" data-id="${x.id}">${ICON.bel} ${x.gebeld ? 'Opnieuw gebeld' : 'Gebeld'}</button><div class="meer">${actief(x) ? `<button class="btn" data-a="later" data-id="${x.id}">Later</button>` : `<button class="btn" data-a="terughalen" data-id="${x.id}">Terughalen</button>`}<button class="btn" data-a="geregeld" data-id="${x.id}">Al geregeld</button><button class="btn" data-a="weg" data-id="${x.id}">Niet relevant</button></div></div>` : ''}`;
 }
 function paneelHtml() {
@@ -825,8 +825,8 @@ function navHtml(tel) { return GROEPEN.map(([g, l]) => `<div class="groep"><div 
 function frameTekenen() {
   const tel = navTellers();
   if (!$('#top').dataset.klaar) {
-    $('#top').innerHTML = `<div class="merkvlak">${WM}</div><div class="prodvlak niet-m"><span class="prodnaam">HekRadar<em>nieuwe klanten</em></span></div>
-<div class="globaal niet-m" id="globaal">${ICON.zoek}<input id="gzoek" type="search" placeholder="Zoek evenement, klant of plaats" autocomplete="off" aria-label="Zoek in HekRadar"><span class="kbd">/</span><div class="zoekres" id="zoekres" role="listbox"></div></div>
+    $('#top').innerHTML = `<div class="merkvlak">${WM}</div><div class="prodvlak niet-m"><span class="prodnaam">RekRadar<em>nieuwe klanten</em></span></div>
+<div class="globaal niet-m" id="globaal">${ICON.zoek}<input id="gzoek" type="search" placeholder="Zoek evenement, klant of plaats" autocomplete="off" aria-label="Zoek in RekRadar"><span class="kbd">/</span><div class="zoekres" id="zoekres" role="listbox"></div></div>
 <div class="top-rechts"><span class="gebruiker"><span class="avatar">HZ</span><span class="gnaam">Henk van der Zouwen</span></span></div>
 <button class="zknop" data-zoekm aria-label="Zoeken">${ICON.zoek}</button><button class="mknop" data-meer aria-label="Menu">${ICON.meer}</button>`;
     $('#top').dataset.klaar = 1;
@@ -870,14 +870,14 @@ function cijfersScherm() {
   return `${paginakop('cijfers', { doel: 'Hoe het gaat, wie je klanten zijn en waar het blijft hangen. Cijfers zijn demo-gegevens.', extra: '<div class="kern"><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron demo">demo</span></b></div></div>' })}
 ${zonderKop(resultatenScherm())}${zonderKop(klantenScherm())}`;
 }
-// ---------- werkbon: één blad voor wie levert (Henk print of geeft door; HekRadar verstuurt niets) ----------
+// ---------- werkbon: één blad voor wie levert (Henk print of geeft door; RekRadar verstuurt niets) ----------
 function werkbonHtml(x) {
   const b = x.boeking || {}, route = b.punt && b.punt.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${b.punt.lat},${b.punt.lng}` : '';
   return `<div class="werkbon"><div class="wb-kop"><div><b>${esc(x.naam)}</b><span>${hoofdletter(datumLang(x.datum))} · ${esc(x.plaats)}</span></div><b class="wb-n">${x.bokken * REKKEN_BOK} rekken</b></div>
 <dl class="eig"><dt>Klant</dt><dd>${esc(x.org ? x.org.naam : '')}</dd><dt>Lossen</dt><dd>${esc(b.los || 'nog doorgeven')}${route ? ` · <a href="${route}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>
 ${b.bouw && b.bouw.belMe ? '<dt>Bouwen</dt><dd>Nog afspreken: klant wil even bellen</dd>' : ''}${b.bouw && b.bouw.lijnen && b.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${b.bouw.lijnen.length} ${b.bouw.lijnen.length === 1 ? 'rij' : 'rijen'}${b.bouw.meter ? `, samen ± ${b.bouw.meter} m` : ''}<div class="bouwkaart">${bouwSvg(b)}</div></dd>` : ''}
 <dt>Contact op de dag</dt><dd>${belbaar(esc(b.contact || 'nog doorgeven'))}</dd><dt>Afstand</dt><dd>${kmTekst(x)} vanaf Almkerk</dd><dt>Betaling</dt><dd>${betTekst(x)}</dd></dl>
-<div class="wb-voet noprint"><button class="btn p" onclick="print()">Printen</button><span class="mu klein">Geef dit blad aan wie levert. HekRadar verstuurt niets.</span></div></div>`;
+<div class="wb-voet noprint"><button class="btn p" onclick="print()">Printen</button><span class="mu klein">Geef dit blad aan wie levert. RekRadar verstuurt niets.</span></div></div>`;
 }
 const SCHERMEN = { vandaag: vandaagScherm, agenda: agendaScherm, cijfers: cijfersScherm, overzicht: overzichtScherm, werklijst: werklijstScherm, evenementen: evenementenScherm, bouw: bouwScherm, klanten: klantenScherm, planning: planningScherm, markt: marktScherm, resultaten: resultatenScherm, werkwijze: werkwijzeScherm, instellingen: instellingenScherm };
 function teken() {
