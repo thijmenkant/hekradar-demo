@@ -1985,7 +1985,7 @@ function mailHtml(x) {
   const o = x.org, m = x.mail || { bokken: x.bokken, datum: x.datum, transport: x.transport };
   x = Object.assign({}, x, { bokken: m.bokken, datum: m.datum, transport: m.transport });
   return `<div class="mail"><div class="mk"><div class="mk-label">${ICON.mail}E-mail</div><span>Aan</span><b style="font-weight:500">${esc(o.email)}</b><span>Onderwerp</span><b style="font-weight:500">Fietsenrekken bij ${esc(x.naam)}?</b></div><div class="mb"><p>Beste ${esc(o.naam)},</p>
-<p>We zagen dat ${esc(x.naam)} ${x.vast || x.s === 'verwacht' ? 'er weer aankomt' : 'eraan komt'}.${x.vast ? ` Vorig jaar stonden onze ${x.vast.rekken} rekken bij ${esc(x.naam)}.` : ''} Daar denken we graag in mee.</p>
+<p>We zagen dat ${esc(x.naam)} ${x.vast || x.s === 'verwacht' ? 'er weer aankomt' : 'eraan komt'}.${x.vast ? ` Vorig jaar stonden onze ${x.vast.rekken} rekken bij jullie.` : ''} Daar denken we graag in mee.</p>
 <p>Komen er bezoekers op de fiets? Dan plaatsen wij fietsenrekken voor jullie. Zo staan alle fietsen netjes en hebben jullie er geen omkijken naar.</p>
 ${voorstelZin(x)}
 <p>Interesse? Via de knop hieronder zie je het voorstel en geef je door waar we kunnen lossen. Betalen kan via iDEAL of op factuur.</p><p><button class="mknop" data-a="probeer" data-id="${x.id}" title="Toon wat de klant ziet">Bekijk en boek</button></p>
