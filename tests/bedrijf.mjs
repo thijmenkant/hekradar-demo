@@ -106,6 +106,9 @@ await p.fill('#gevdat', '2026-11-20'); await p.dispatchEvent('#gevdat', 'change'
 t('dag kiezen: alleen die dag', await p.evaluate(() => GEVONDEN === '2026-11-20' && HUIDIG.length > 0 && HUIDIG.every((i) => DB.vind(i).gevonden === '2026-11-20')));
 await p.click('#main .resultaat-kop [data-gev=""]'); await p.waitForTimeout(80);
 t('alle evenementen: ook wie al klant is', await p.evaluate(() => GEVONDEN === '' && HUIDIG.some((i) => KLANT.includes(DB.vind(i).s))));
+t('scan rechtsboven: radar met de gegevens van vannacht', (await txt(p, '#main .scanblok')).includes('Scan vannacht 03:15') && !!(await p.$('#main .scanblok .radar')) && !(await p.$('#top .radar')));
+await p.click('#main .scanblok [data-gev="vandaag"]'); await p.waitForTimeout(80);
+t('scan rechtsboven: link naar nieuw vandaag', await p.evaluate(() => GEVONDEN === 'vandaag'));
 await p.close();
 
 if (fouten.length) { fout += fouten.length; console.log('JS-fouten:', fouten); }

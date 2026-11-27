@@ -224,6 +224,9 @@ ${t[0] === 'klaar' && V.laat.length ? `<div class="blok-voet">${V.laat.length} o
 // EVENEMENTEN: zoeken en selecteren met filters links.
 // =====================================================================
 const STATUSF = [['alle', 'Alle'], ['klant', 'Al aanbod of geboekt'], ['klaar', 'Mailadres bekend'], ['aanvraag', 'Vergunning in aanvraag'], ['verwacht', 'Jaarlijks'], ['zonder', 'Geen mailadres'], ['zoekt', 'Contact gezocht'], ['bouw', 'Bouw en verbouw'], ['later', 'Weggezet (later)']];
+// Radar met de gegevens van de laatste scan, rechtsboven op Alle evenementen.
+const radarHtml = (cls = '') => `<span class="radar ${cls}" aria-hidden="true"><i class="radar-veeg"></i><b class="radar-stip s1"></b><b class="radar-stip s2"></b><b class="radar-stip s3"></b></span>`;
+const scanBlok = () => { const n = DB.alle().filter((x) => x.gevonden === VANDAAG && x.s !== 'weg').length; return `<div class="scanblok" role="status" aria-label="Scan vannacht 03:15: ${SCAN.laatsteDagAantal} publicaties gelezen, ${n} nieuw">${radarHtml('groot')}<div><b>Scan vannacht 03:15</b><span><b>${SCAN.laatsteDagAantal}</b> publicaties gelezen${n ? ` · <button class="link" data-gev="vandaag">${n} nieuw vandaag</button>` : ''}</span></div></div>`; };
 // Indeling voor Henk: Evenementen en Bouw en verbouw als twee tabbladen van Alle evenementen.
 const evTabs = () => HENK ? [tab('data-v', 'evenementen', VIEW === 'evenementen', 'Evenementen', zichtbaar().filter((x) => !['weg', 'gepland', 'bouw', 'verloren'].includes(x.s) && x.datum && dagenTot(x.datum) >= 0 && actief(x) && binnenAfstand(x)).length), tab('data-v', 'bouw', VIEW === 'bouw', 'Bouw en verbouw', voorraad().bouwBellen.length)].join('') : '';
 // Gevonden door de scan: vandaag, gisteren, deze week of een gekozen dag.
@@ -241,7 +244,7 @@ function evenementenScherm() {
   if (SOORT && !soorten.includes(SOORT)) SOORT = '';
   const l = sorteer(metStatus.filter((x) => !SOORT || (x.s === 'bouw' ? 'bouw' : x.soort) === SOORT));
   const opt = (attr, k, aan, n, c) => `<button class="fopt ${aan ? 'on' : ''}" ${attr}="${k}" aria-pressed="${aan}"><i></i>${n}<span>${c}</span></button>`;
-  return `${paginakop('evenementen', { doel: `Alle evenementen uit de vergunningen in ${esc(regioTekst())}. Filter links, open rechts.`, tabs: evTabs() })}
+  return `${paginakop('evenementen', { doel: `Alle evenementen uit de vergunningen in ${esc(regioTekst())}. Filter links, open rechts.`, tabs: evTabs(), extra: scanBlok() })}
 <div class="inhoud"><div class="zoekscherm">
 <aside class="facet" aria-label="Filters">
 <fieldset class="gevset"><legend>Gevonden door de scan</legend>${GEVF.map(([k, n]) => opt('data-gev', k, GEVONDEN === k, n, alleBasis.filter((x) => gevondenOp(x, k)).length)).join('')}<label class="gevdag">Of kies een dag<input type="date" class="in" id="gevdat" max="${VANDAAG}" value="${/^\d{4}-/.test(GEVONDEN) ? GEVONDEN : ''}"></label></fieldset>
@@ -778,7 +781,7 @@ function frameTekenen() {
   if (!$('#top').dataset.klaar) {
     $('#top').innerHTML = `<div class="merkvlak">${WM}</div><div class="prodvlak niet-m"><span class="prodnaam">HekRadar<em>nieuwe klanten</em></span></div>
 <div class="globaal niet-m" id="globaal">${ICON.zoek}<input id="gzoek" type="search" placeholder="Zoek evenement, klant of plaats" autocomplete="off" aria-label="Zoek in HekRadar"><span class="kbd">/</span><div class="zoekres" id="zoekres" role="listbox"></div></div>
-<div class="top-rechts"><span class="scanregel"><span class="radar" role="img" aria-label="Radar: scant elke nacht om 03:15" title="HekRadar scant elke nacht om 03:15"><i class="radar-veeg"></i><b class="radar-stip s1"></b><b class="radar-stip s2"></b><b class="radar-stip s3"></b></span>Scan vannacht 03:15 · <b>${SCAN.laatsteDagAantal}</b> publicaties</span><span class="gebruiker"><span class="avatar">HZ</span><span class="gnaam">Henk van der Zouwen</span></span></div>
+<div class="top-rechts"><span class="gebruiker"><span class="avatar">HZ</span><span class="gnaam">Henk van der Zouwen</span></span></div>
 <button class="zknop" data-zoekm aria-label="Zoeken">${ICON.zoek}</button><button class="mknop" data-meer aria-label="Menu">${ICON.meer}</button>`;
     $('#top').dataset.klaar = 1;
   }
