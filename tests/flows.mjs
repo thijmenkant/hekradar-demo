@@ -69,7 +69,7 @@ for (const [w, h] of [[1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
   await naar(p, 'evenementen');
   await p.click('#main .t-ev .r'); await p.waitForTimeout(50); const lt = await txt(p, '#ptitel');
   await p.click('#paneel [data-a="later"]'); await p.waitForTimeout(50); await esc(p);
-  t(W + 'filter Weggezet verschijnt', await n(p, '[data-st="later"]') === 1);
+  t(W + 'filter Weggezet verschijnt', await n(p, '.facet [data-st="later"]') === 1);
   await p.click('[data-st="later"]'); await p.waitForTimeout(40); await p.click('#main .t-ev .r'); await p.waitForTimeout(40);
   t(W + 'later item', (await txt(p, '#ptitel')) === lt);
   await p.click('#paneel [data-a="terughalen"]'); await p.waitForTimeout(40); await esc(p);

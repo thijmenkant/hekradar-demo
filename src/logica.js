@@ -207,7 +207,19 @@ const inRegio = (x) => (!PROV || x.prov === PROV) && (!GEM || x.gem === GEM);
 const actief = (x) => !x.later || x.later <= VANDAAG;
 const binnenAfstand = (x) => !AFST || (x.km || 0) <= AFST;
 const dv = (x, y) => (x.datum || '9999').localeCompare(y.datum || '9999');
-const sorteer = (l) => l.sort((a, b) => SORT === 'kans' ? kans(b).score - kans(a).score || dv(a, b) : SORT === 'afstand' ? (a.km || 0) - (b.km || 0) || dv(a, b) : dv(a, b));
+// Sorteren op elke kolom. Nog een keer op dezelfde kop klikken draait de volgorde om (SORTOM).
+const STATUSVOLG = ['antwoord', 'klaar', 'verwacht', 'zonder', 'zoekt', 'verstuurd', 'geboekt', 'geleverd', 'bouw', 'gepland', 'verloren', 'weg'];
+const vgl = (a, b) => (a || '').localeCompare(b || '', 'nl');
+const sorteer = (l) => {
+  const c = (a, b) => SORT === 'kans' ? kans(b).score - kans(a).score || dv(a, b)
+    : SORT === 'afstand' ? (a.km || 0) - (b.km || 0) || dv(a, b)
+    : SORT === 'naam' ? vgl(a.naam, b.naam)
+    : SORT === 'soort' ? vgl(a.soort, b.soort) || dv(a, b)
+    : SORT === 'plaats' ? vgl(a.plaats, b.plaats) || dv(a, b)
+    : SORT === 'status' ? STATUSVOLG.indexOf(a.s) - STATUSVOLG.indexOf(b.s) || dv(a, b)
+    : dv(a, b);
+  return l.sort((a, b) => (SORTOM ? -1 : 1) * c(a, b));
+};
 // Kansscore 0–100. Aannames, met Henk vast te stellen; later bij te stellen op wat echt geboekt wordt.
 const KANSREGELS = [
   ['Bouw: lange huur (meer dan 4 weken)', '+20'], ['Bouw: al afgelopen', '−30'], ['Bouw: aanvrager bekend', '+5'],

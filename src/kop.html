@@ -258,6 +258,21 @@ textarea.in { height: auto; padding: 8px 10px; resize: vertical; }
 .th + .tr { border-top: 0; }
 .th button { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; letter-spacing: inherit; }
 .th button:hover, .th button[aria-sort] { color: var(--x-titel); }
+/* Kolomfilters: trechter naast de kop, lijstje eronder */
+.t-ev .th > div { display: flex; align-items: center; gap: 2px; position: relative; min-width: 0; }
+.kolfilter { position: relative; display: inline-block; }
+.kolfilter > summary { list-style: none; cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; color: var(--ink4); }
+.kolfilter > summary::-webkit-details-marker { display: none; }
+.kolfilter > summary svg { width: 13px; height: 13px; }
+.kolfilter > summary:hover, .kolfilter[open] > summary { background: var(--hover); color: var(--x-titel); }
+.kolfilter.aan > summary { background: var(--x-acc); color: #fff; }
+.kolpop { position: absolute; top: calc(100% + 4px); left: -6px; z-index: 40; min-width: 210px; max-height: 340px; overflow: auto; background: var(--vlak); border: 1px solid var(--lijn2); border-radius: var(--rad); box-shadow: 0 10px 28px rgba(0,0,0,.14); padding: 4px; text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 400; color: var(--ink); }
+.kolpop.rechts { left: auto; right: -6px; }
+.kolfilter:not([open]) > .kolpop { display: none; }
+.th .kolpop button { display: flex; width: 100%; justify-content: space-between; gap: 16px; padding: 7px 10px; border-radius: 3px; color: var(--ink); text-align: left; }
+.th .kolpop button span { color: var(--ink3); font-variant-numeric: tabular-nums; }
+.th .kolpop button:hover { background: var(--hover); color: var(--ink); }
+.th .kolpop button.on { background: var(--sel); font-weight: 600; }
 .r { cursor: pointer; transition: background var(--snel); outline: none; }
 .r:hover { background: var(--hover); }
 .r:focus-visible { background: var(--hover); box-shadow: inset 3px 0 0 var(--g500); }

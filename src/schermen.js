@@ -12,7 +12,7 @@ const DB = {
 };
 
 // ---------- staat ----------
-let GEVONDEN = '', AFST = 0, SORT = 'kans', STAPEL = [], HUIDIG = [], KTAB = 'antwoord', HTAB = 'klaar', VIEW = 'overzicht', DETAIL = null, STATUS = 'alle', SOORT = '', ZOEK = '', PROV = '', GEM = '', KWEERGAVE = 'bord';
+let SORTOM = false, GEVONDEN = '', AFST = 0, SORT = 'kans', STAPEL = [], HUIDIG = [], KTAB = 'antwoord', HTAB = 'klaar', VIEW = 'overzicht', DETAIL = null, STATUS = 'alle', SOORT = '', ZOEK = '', PROV = '', GEM = '', KWEERGAVE = 'bord';
 Object.assign(ICON, {
   overzicht: I('<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>'),
   werklijst: I('<path d="M9 6h12M9 12h12M9 18h12"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/>'),
@@ -23,6 +23,7 @@ Object.assign(ICON, {
   meer: I('<path d="M4 6h16M4 12h16M4 18h16"/>'),
   x: I('<path d="M18 6L6 18M6 6l12 12"/>'), op: I('<path d="M18 15l-6-6-6 6"/>'), neer: I('<path d="M6 9l6 6 6-6"/>'),
   zoek: I('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+  filter: I('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
 });
 ICON.agenda = ICON.planning; ICON.cijfers = ICON.resultaten;
 const WM = `<div class="wm">${BIKE('currentColor', '#5cb85f', 28).replace('stroke="#5cb85f"', 'style="stroke:var(--x-wm-acc)"')}<span>fietsenrek<em>huren</em>.com</span></div>`;
@@ -104,7 +105,9 @@ function wlRij(x) {
 <div class="cel c-st" role="cell">${statusCel(x)}</div>
 <div class="cel act c-act" role="cell"><button class="btn sm rij-knop" data-open="${x.id}" tabindex="-1">${KNOP[x.s] || 'Bekijken'}</button></div></div>`;
 }
-const sortKop = (k, n) => `<button data-sort="${k}" ${SORT === k ? `aria-sort="${k === 'kans' ? 'descending' : 'ascending'}"` : ''}>${n}${SORT === k ? ` ${k === 'kans' ? '▼' : '▲'}` : ''}</button>`;
+const sortKop = (k, n) => { const af = (k === 'kans') !== SORTOM; return `<button data-sort="${k}" title="Sorteer op ${n.toLowerCase()}" ${SORT === k ? `aria-sort="${af ? 'descending' : 'ascending'}"` : ''}>${n}${SORT === k ? ` ${af ? '▼' : '▲'}` : ''}</button>`; };
+// Filterknopje in een kolomkop: lijstje met waarden en aantallen, zoals in een spreadsheet.
+const kolFilter = (label, actief, opties, rechts) => `<details class="kolfilter ${actief ? 'aan' : ''}"><summary aria-label="Filter op ${label}" title="Filter op ${label}${actief ? ': ' + esc(actief) : ''}">${ICON.filter}</summary><div class="kolpop ${rechts ? 'rechts' : ''}" role="menu">${opties.map(([attr, v, n, c, on]) => `<button ${attr}="${esc(v)}" class="${on ? 'on' : ''}" role="menuitemradio" aria-checked="${on}">${esc(n)}<span>${c}</span></button>`).join('')}</div></details>`;
 function evRij(x) {
   HUIDIG.push(x.id);
   return `<div ${rijAttr(x)}><div class="cel c-kans" role="cell">${kansCel(x)}</div>
@@ -234,7 +237,11 @@ const GEVF = [['', 'Altijd'], ['vandaag', 'Nieuw vandaag'], ['gisteren', 'Gister
 const gevondenOp = (x, g) => !g || (!!x.gevonden && (g === 'vandaag' ? x.gevonden === VANDAAG : g === 'gisteren' ? x.gevonden === addDag(VANDAAG, -1) : g === 'week' ? dagenTot(x.gevonden) >= -6 : x.gevonden === g));
 const gevTekst = (g) => g === 'vandaag' ? 'nieuw vandaag' : g === 'gisteren' ? 'gevonden gisteren' : g === 'week' ? 'gevonden in de afgelopen 7 dagen' : g ? 'gevonden op ' + datumLang(g) : '';
 function evenementenScherm() {
-  const alleBasis = zichtbaar().filter((x) => !['weg', 'gepland', 'verloren'].includes(x.s) && !(HENK && x.s === 'bouw') && (x.s === 'bouw' ? x.bstatus !== 'afgelopen' : dagenTot(x.datum) >= 0) && binnenAfstand(x) && zoekt(x.naam + x.plaats + x.gem + (x.org ? x.org.naam : '') + (x.aanvrager || '')));
+  const bf = (x) => !['weg', 'gepland', 'verloren'].includes(x.s) && !(HENK && x.s === 'bouw') && (x.s === 'bouw' ? x.bstatus !== 'afgelopen' : dagenTot(x.datum) >= 0) && binnenAfstand(x) && zoekt(x.naam + x.plaats + x.gem + (x.org ? x.org.naam : '') + (x.aanvrager || ''));
+  const alleBasis = zichtbaar().filter(bf);
+  // Tellingen per provincie in de kolomkop: alle andere filters wel, de provincie zelf niet.
+  const inStatus = (x) => STATUS === 'later' ? !actief(x) : !actief(x) ? false : STATUS === 'alle' ? true : STATUS === 'klant' ? KLANT.includes(x.s) : STATUS === 'aanvraag' ? x.fase === 'A' && !KLANT.includes(x.s) : x.s === STATUS;
+  const provBron = DB.alle().filter((x) => bf(x) && gevondenOp(x, GEVONDEN) && inStatus(x) && (!SOORT || (x.s === 'bouw' ? 'bouw' : x.soort) === SOORT));
   const basis = alleBasis.filter((x) => gevondenOp(x, GEVONDEN));
   const weg = basis.filter((x) => !actief(x)), act = basis.filter(actief);
   if (STATUS === 'later' && !weg.length) STATUS = 'alle';
@@ -254,7 +261,11 @@ function evenementenScherm() {
 <fieldset class="alleen-m mfilters"><select class="sel" id="soortsel" aria-label="Soort"><option value="">Alle soorten</option>${soorten.map((s) => `<option value="${esc(s)}" ${SOORT === s ? 'selected' : ''}>${hoofdletter(s)}</option>`).join('')}</select>${afstandFilter()}${regioFilter()}</fieldset>
 </aside>
 <section class="blok"><div class="resultaat-kop"><b class="num">${l.length} resultaten${GEVONDEN ? ` · ${gevTekst(GEVONDEN)} <button class="link klein" data-gev="">wis</button>` : ''}</b>${zoekVeld('Zoek op naam, plaats of organisatie')}${sorteerFilter('alleen-m')}</div>
-<div class="t-ev" role="table" aria-label="Evenementen"><div class="tr th" role="row"><div>${sortKop('kans', 'Kans')}</div><div>Evenement</div><div>${sortKop('datum', 'Datum')}</div><div class="c-soort">Soort</div><div class="c-reg">Plaats</div><div class="c-km">${sortKop('afstand', 'Afstand')}</div><div>Status</div></div>
+<div class="t-ev" role="table" aria-label="Evenementen"><div class="tr th" role="row"><div>${sortKop('kans', 'Kans')}</div><div>${sortKop('naam', 'Evenement')}</div><div>${sortKop('datum', 'Datum')}</div>
+<div class="c-soort">${sortKop('soort', 'Soort')}${kolFilter('soort', SOORT, [['data-soort', '', 'Alle soorten', metStatus.length, !SOORT], ...soorten.map((s) => ['data-soort', s, hoofdletter(s), metStatus.filter((x) => (x.s === 'bouw' ? 'bouw' : x.soort) === s).length, SOORT === s])])}</div>
+<div class="c-reg">${sortKop('plaats', 'Plaats')}${kolFilter('provincie', PROV, [['data-provk', '', 'Alle provincies', provBron.length, !PROV], ...[...new Set(provBron.map((x) => x.prov))].sort().map((pv) => ['data-provk', pv, pv, provBron.filter((x) => x.prov === pv).length, PROV === pv])])}</div>
+<div class="c-km">${sortKop('afstand', 'Afstand')}${(() => { const bron = DB.alle().filter((x) => { const a = AFST; AFST = 0; const ok = bf(x); AFST = a; return ok && inRegio(x) && gevondenOp(x, GEVONDEN) && inStatus(x) && (!SOORT || (x.s === 'bouw' ? 'bouw' : x.soort) === SOORT); }); return kolFilter('afstand', AFST ? `tot ${AFST} km` : '', [[0, 'Elke afstand'], [50, 'Tot 50 km'], [100, 'Tot 100 km'], [150, 'Tot 150 km']].map(([v, n]) => ['data-afstk', v, n, bron.filter((x) => !v || (x.km || 0) <= v).length, AFST === v])); })()}</div>
+<div>${sortKop('status', 'Status')}${kolFilter('status', STATUS !== 'alle' ? (STATUSF.find(([k]) => k === STATUS) || [, ''])[1] : '', STATUSF.filter(([k]) => (k !== 'later' || weg.length) && !(HENK && k === 'bouw')).map(([k, n]) => ['data-st', k, n, filt(k).length, STATUS === k]), true)}</div></div>
 ${l.length ? l.map(evRij).join('') : leeg('Niets gevonden.', ' Pas de filters of de zoekterm aan.')}</div>
 <div class="blok-voet">Demo met ${E.length} verzonnen evenementen. De echte scan vond sinds 12 november ${SCAN.publicaties.toLocaleString('nl-NL')} publicaties uit ${SCAN.gemeenten} gemeenten.</div></section>
 </div></div>`;
@@ -936,6 +947,7 @@ const dialoogOpen = () => $('#scherm').classList.contains('open');
 const meerDicht = () => $('#meerblad').classList.remove('open');
 
 document.addEventListener('click', (e) => {
+  document.querySelectorAll('details.kolfilter[open]').forEach((d) => { if (!d.contains(e.target)) d.open = false; });
   if (!e.target.closest('.globaal') && !e.target.closest('[data-zoekm]')) { $('#zoekres') && $('#zoekres').classList.remove('on'); $('#globaal') && $('#globaal').classList.remove('mopen'); }
   const kaartje = e.target.closest('#kaartje');
   if (kaartje) { const r = kaartje.getBoundingClientRect(); if (!pin || !kaartje.contains(pin)) { pin = document.createElement('div'); pin.className = 'pin'; kaartje.appendChild(pin); } pin.style.left = (e.clientX - r.left) + 'px'; pin.style.top = (e.clientY - r.top) + 'px'; losPunt = { schets: true, x: +((e.clientX - r.left) / r.width * 100).toFixed(1), y: +((e.clientY - r.top) / r.height * 100).toFixed(1) }; $('#loscoord').textContent = 'Losplek gekozen op de schets.'; $('#ffout').textContent = ''; return; }
@@ -952,7 +964,9 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('[data-sluit]')) { sluit(); return; }
   const sec = e.target.closest('[data-sec]'); if (sec) { e.preventDefault(); document.querySelectorAll('.inst-nav a').forEach((a) => a.classList.toggle('on', a === sec)); const d = document.getElementById(sec.dataset.sec); if (d) d.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   const kw = e.target.closest('[data-kw]'); if (kw) { KWEERGAVE = kw.dataset.kw; teken(); return; }
-  const so = e.target.closest('[data-sort]'); if (so) { SORT = so.dataset.sort; teken(); return; }
+  const so = e.target.closest('[data-sort]'); if (so) { if (SORT === so.dataset.sort) SORTOM = !SORTOM; else { SORT = so.dataset.sort; SORTOM = false; } teken(); return; }
+  const ak_ = e.target.closest('[data-afstk]'); if (ak_) { AFST = Number(ak_.dataset.afstk); teken(); return; }
+  const pk_ = e.target.closest('[data-provk]'); if (pk_) { PROV = pk_.dataset.provk; GEM = ''; teken(); return; }
   const sr = e.target.closest('[data-soort]'); if (sr) { SOORT = sr.dataset.soort; teken(); return; }
   const kt = e.target.closest('[data-ktab]'); if (kt) { KTAB = kt.dataset.ktab; teken(); return; }
   const ht = e.target.closest('[data-htab]'); if (ht) { HTAB = ht.dataset.htab; teken(); return; }
@@ -1015,7 +1029,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'prov') { PROV = e.target.value; GEM = ''; teken(); }
   if (e.target.id === 'gem') { GEM = e.target.value; teken(); }
   if (e.target.id === 'afst') { AFST = Number(e.target.value); teken(); }
-  if (e.target.id === 'sort') { SORT = e.target.value; teken(); }
+  if (e.target.id === 'sort') { SORT = e.target.value; SORTOM = false; teken(); }
   if (e.target.id === 'soortsel') { SOORT = e.target.value; teken(); }
   if (e.target.id === 'gevdat') { GEVONDEN = e.target.value || ''; teken(); }
   if (e.target.closest && e.target.closest('.inst')) wijzigingInst();

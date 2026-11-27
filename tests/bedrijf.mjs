@@ -126,6 +126,24 @@ await p.click('[data-a="antw-outlook"]'); await p.waitForTimeout(80);
 t('antwoord: klant wacht niet meer op Henk', await p.evaluate((i) => DB.vind(i).s === 'verstuurd' && !voorraad().antwoord.some((x) => x.id === i), ant));
 await p.close();
 
+// Kolomkoppen: sorteren op elke kolom (nog eens klikken = omgekeerd) en filteren via de trechter
+p = await nieuw();
+await p.goto(url.replace(/index\.html.*/, 'index.html') + '#evenementen'); await p.reload(); await p.waitForTimeout(80);
+await p.click('.t-ev .th [data-sort="naam"]'); await p.waitForTimeout(40);
+const az = await p.evaluate(() => HUIDIG.map((i) => DB.vind(i).naam));
+t('kolom: sorteren op evenement A-Z', az.length > 1 && az.every((n, i) => !i || az[i - 1].localeCompare(n, 'nl') <= 0));
+await p.click('.t-ev .th [data-sort="naam"]'); await p.waitForTimeout(40);
+const za = await p.evaluate(() => HUIDIG.map((i) => DB.vind(i).naam));
+t('kolom: nog eens klikken draait om', za[0] === az[az.length - 1]);
+await p.click('.t-ev .th .c-soort .kolfilter > summary'); await p.click('.t-ev .th .c-soort .kolpop [data-soort="kerstmarkt"]'); await p.waitForTimeout(40);
+t('kolom: filter op soort', await p.evaluate(() => SOORT === 'kerstmarkt' && HUIDIG.length > 0 && HUIDIG.every((i) => DB.vind(i).soort === 'kerstmarkt')) && !!(await p.$('.t-ev .th .c-soort .kolfilter.aan')));
+t('kolom: provincietellingen volgen de andere filters', await p.evaluate(() => { const n = [...document.querySelectorAll('.t-ev .th .c-reg .kolpop [data-provk=""] span')][0].textContent; return Number(n) === HUIDIG.length; }));
+await p.click('.t-ev .th .c-reg .kolfilter > summary'); await p.click('.t-ev .th .c-reg .kolpop [data-provk="Gelderland"]'); await p.waitForTimeout(40);
+t('kolom: filter op provincie', await p.evaluate(() => PROV === 'Gelderland' && HUIDIG.every((i) => DB.vind(i).prov === 'Gelderland')));
+await p.click('.t-ev .th .c-km .kolfilter > summary'); await p.click('.t-ev .th .c-km .kolpop [data-afstk="50"]'); await p.waitForTimeout(40);
+t('kolom: filter op afstand', await p.evaluate(() => AFST === 50 && HUIDIG.every((i) => (DB.vind(i).km || 0) <= 50)));
+await p.close();
+
 if (fouten.length) { fout += fouten.length; console.log('JS-fouten:', fouten); }
 console.log(`bedrijfsregels: ${ok} geslaagd, ${fout} mislukt`);
 await b.close(); process.exit(fout ? 1 : 0);
