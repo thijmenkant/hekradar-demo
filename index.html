@@ -1210,12 +1210,14 @@ const GROEPEN_STANDAARD = [
   ['Klanten en uitvoering', [['klanten', 'Klanten'], ['planning', 'Planning']]],
   ['Inzicht', [['markt', 'Markt'], ['resultaten', 'Resultaten']]],
 ];
-const GROEPEN = HENK ? [['Henk', [['vandaag', 'Vandaag'], ['agenda', 'Agenda'], ['cijfers', 'Klanten en cijfers']]]] : GROEPEN_STANDAARD;
-const SECUNDAIR = HENK ? [['evenementen', 'Alle evenementen'], ['bouw', 'Bouw en verbouw'], ['markt', 'Markt'], ['werkwijze', 'Zo werkt het'], ['instellingen', 'Instellingen']] : [['werkwijze', 'Zo werkt het'], ['instellingen', 'Instellingen']];
+const GROEPEN = HENK ? [['Henk', [['vandaag', 'Vandaag'], ['evenementen', 'Alle evenementen'], ['agenda', 'Agenda'], ['cijfers', 'Klanten en cijfers']]]] : GROEPEN_STANDAARD;
+const SECUNDAIR = HENK ? [['markt', 'Markt'], ['werkwijze', 'Zo werkt het'], ['instellingen', 'Instellingen']] : [['werkwijze', 'Zo werkt het'], ['instellingen', 'Instellingen']];
 // In de indeling voor Henk verwijzen de oude schermen naar de drie nieuwe.
 const HENKNAAR = HENK ? { overzicht: 'vandaag', planning: 'agenda', klanten: 'cijfers', resultaten: 'cijfers' } : {};
 if (HENK) VIEW = 'vandaag';
-const MODULES = Object.fromEntries([['vandaag', { naam: 'Vandaag', groep: 'Henk' }], ['agenda', { naam: 'Agenda', groep: 'Henk' }], ['cijfers', { naam: 'Klanten en cijfers', groep: 'Henk' }], ...GROEPEN_STANDAARD.flatMap(([g, l]) => l.map(([k, n]) => [k, { naam: n, groep: g }])), ['werkwijze', { naam: 'Zo werkt het', groep: 'Hulp' }], ['instellingen', { naam: 'Instellingen', groep: 'Beheer' }]]);
+const MODULES_LIJST = [['vandaag', { naam: 'Vandaag', groep: 'Henk' }], ['agenda', { naam: 'Agenda', groep: 'Henk' }], ['cijfers', { naam: 'Klanten en cijfers', groep: 'Henk' }], ...GROEPEN_STANDAARD.flatMap(([g, l]) => l.map(([k, n]) => [k, { naam: n, groep: g }])), ['werkwijze', { naam: 'Zo werkt het', groep: 'Hulp' }], ['instellingen', { naam: 'Instellingen', groep: 'Beheer' }]];
+const MODULES = Object.fromEntries(MODULES_LIJST);
+if (HENK) { MODULES.evenementen = { naam: 'Alle evenementen', groep: 'Henk' }; MODULES.bouw = { naam: 'Alle evenementen', groep: 'Henk' }; }
 const NAAST = ['werklijst', 'evenementen']; // detail naast de lijst; elders als lade
 const bedrag = (x) => x.boeking ? x.boeking.prijs : x.bokken * PRIJS_BOK;
 const overTekst = (d) => { if (!d) return ''; const n = dagenTot(d); return n < 0 ? 'geweest' : n === 0 ? 'vandaag' : n === 1 ? 'morgen' : n < 14 ? `over ${n} dagen` : `over ${Math.round(n / 7)} weken`; };
@@ -1395,8 +1397,10 @@ ${t[0] === 'klaar' && V.laat.length ? `<div class="blok-voet">${V.laat.length} o
 // EVENEMENTEN: zoeken en selecteren met filters links.
 // =====================================================================
 const STATUSF = [['alle', 'Alle'], ['klaar', 'Mailadres bekend'], ['aanvraag', 'Vergunning in aanvraag'], ['verwacht', 'Jaarlijks'], ['zonder', 'Geen mailadres'], ['zoekt', 'Contact gezocht'], ['bouw', 'Bouw en verbouw'], ['later', 'Weggezet (later)']];
+// Indeling voor Henk: Evenementen en Bouw en verbouw als twee tabbladen van Alle evenementen.
+const evTabs = () => HENK ? [tab('data-v', 'evenementen', VIEW === 'evenementen', 'Evenementen', DB.alle().filter((x) => !KLANT.includes(x.s) && !['weg', 'gepland', 'bouw', 'verloren'].includes(x.s) && x.datum && dagenTot(x.datum) >= 0 && actief(x)).length), tab('data-v', 'bouw', VIEW === 'bouw', 'Bouw en verbouw', voorraad().bouwBellen.length)].join('') : '';
 function evenementenScherm() {
-  const basis = zichtbaar().filter((x) => !KLANT.includes(x.s) && !['weg', 'gepland'].includes(x.s) && (x.s === 'bouw' ? x.bstatus !== 'afgelopen' : dagenTot(x.datum) >= 0) && binnenAfstand(x) && zoekt(x.naam + x.plaats + x.gem + (x.org ? x.org.naam : '') + (x.aanvrager || '')));
+  const basis = zichtbaar().filter((x) => !KLANT.includes(x.s) && !['weg', 'gepland', 'verloren'].includes(x.s) && !(HENK && x.s === 'bouw') && (x.s === 'bouw' ? x.bstatus !== 'afgelopen' : dagenTot(x.datum) >= 0) && binnenAfstand(x) && zoekt(x.naam + x.plaats + x.gem + (x.org ? x.org.naam : '') + (x.aanvrager || '')));
   const weg = basis.filter((x) => !actief(x)), act = basis.filter(actief);
   if (STATUS === 'later' && !weg.length) STATUS = 'alle';
   const filt = (k) => k === 'later' ? weg : k === 'alle' ? act : k === 'aanvraag' ? act.filter((x) => x.fase === 'A') : act.filter((x) => x.s === k);
@@ -1405,10 +1409,10 @@ function evenementenScherm() {
   if (SOORT && !soorten.includes(SOORT)) SOORT = '';
   const l = sorteer(metStatus.filter((x) => !SOORT || (x.s === 'bouw' ? 'bouw' : x.soort) === SOORT));
   const opt = (attr, k, aan, n, c) => `<button class="fopt ${aan ? 'on' : ''}" ${attr}="${k}" aria-pressed="${aan}"><i></i>${n}<span>${c}</span></button>`;
-  return `${paginakop('evenementen', { doel: `Alle evenementen uit de vergunningen in ${esc(regioTekst())}. Filter links, open rechts.` })}
+  return `${paginakop('evenementen', { doel: `Alle evenementen uit de vergunningen in ${esc(regioTekst())}. Filter links, open rechts.`, tabs: evTabs() })}
 <div class="inhoud"><div class="zoekscherm">
 <aside class="facet" aria-label="Filters">
-<fieldset class="statusset"><legend>Status</legend>${STATUSF.filter(([k]) => k !== 'later' || weg.length).map(([k, n]) => opt('data-st', k, STATUS === k, n, filt(k).length)).join('')}</fieldset>
+<fieldset class="statusset"><legend>Status</legend>${STATUSF.filter(([k]) => (k !== 'later' || weg.length) && !(HENK && k === 'bouw')).map(([k, n]) => opt('data-st', k, STATUS === k, n, filt(k).length)).join('')}</fieldset>
 <fieldset class="niet-m"><legend>Soort</legend>${opt('data-soort', '', !SOORT, 'Alle soorten', metStatus.length)}${soorten.map((s) => opt('data-soort', s, SOORT === s, hoofdletter(s), metStatus.filter((x) => (x.s === 'bouw' ? 'bouw' : x.soort) === s).length)).join('')}</fieldset>
 <fieldset class="niet-m"><legend>Waar</legend>${regioFilter()}${afstandFilter()}</fieldset>
 <fieldset class="alleen-m mfilters"><select class="sel" id="soortsel" aria-label="Soort"><option value="">Alle soorten</option>${soorten.map((s) => `<option value="${esc(s)}" ${SOORT === s ? 'selected' : ''}>${hoofdletter(s)}</option>`).join('')}</select>${afstandFilter()}${regioFilter()}</fieldset>
@@ -1439,7 +1443,7 @@ function bouwScherm() {
   const V = voorraad(), metPeriode = [...V.bouwBellen, ...V.bouwGebeld].filter((x) => x.datum).length;
   const kop = `<div class="tr th tl-kop" role="row"><div>Project</div><div class="c-wie">Wie bellen</div><div>Afstand</div><div class="c-tl">${tlAs('')}</div><div class="c-st">Status</div></div>`;
   const groep = (t, u, l) => l.length ? `<div class="groepsrij">${t} <span>${l.length} · ${u}</span></div>${l.map(bouwRij).join('')}` : '';
-  return `${paginakop('bouw', { doel: 'Echte projecten uit het Gemeenteblad (12 maanden) met een tijdelijke fietsenstalling. Lange huur; Henk belt, HekRadar mailt hier niet.', extra: `<div class="kern"><div><span>Te bellen</span><b>${V.bouwBellen.length}</b></div><div><span>Met bekende periode</span><b>${metPeriode}</b></div><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron echt">echt</span></b></div></div>` })}
+  return `${paginakop('bouw', { tabs: evTabs(), doel: 'Echte projecten uit het Gemeenteblad (12 maanden) met een tijdelijke fietsenstalling. Lange huur; Henk belt, HekRadar mailt hier niet.', extra: `<div class="kern"><div><span>Te bellen</span><b>${V.bouwBellen.length}</b></div><div><span>Met bekende periode</span><b>${metPeriode}</b></div><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron echt">echt</span></b></div></div>` })}
 <div class="inhoud"><section class="blok"><div class="werkbalk"><p class="uitleg">Balk = huurperiode volgens de publicatie.</p><div class="rechts">${afstandFilter()}</div></div>
 <div class="tl" role="table" aria-label="Bouwprojecten">${kop}
 ${groep('Te bellen', 'nog geen contact', V.bouwBellen)}${groep('Gebeld of later', 'opvolgen', V.bouwGebeld)}${groep('Afgelopen', 'goed om te weten wie dit doet', V.bouwAf)}
@@ -1935,7 +1939,7 @@ ${vb ? `<label class="vink"><input type="checkbox" id="fvorig"><span>Zelfde losp
 // FRAME TEKENEN
 // =====================================================================
 function navTellers() { const V = voorraad(); return { vandaag: [V.antwoord.length, 'urg'], agenda: [V.leveren.filter((x) => dagenTot(x.datum) <= 14).length, 'let'], cijfers: [V.facturen.length, 'let'], werklijst: [V.klaar.length], bouw: [V.bouwBellen.length], klanten: [V.antwoord.length, 'urg'], planning: [V.leveren.filter((x) => dagenTot(x.datum) <= 14).length, 'let'] }; }
-function navKnop([k, n], tel) { const t = tel[k]; return `<button class="ni ${VIEW === k ? 'on' : ''}" data-v="${k}" ${VIEW === k ? 'aria-current="page"' : ''} title="${n}">${ICON[k]}<span class="lbl">${n}</span>${t && t[0] ? `<span class="n ${t[1] || ''}">${t[0]}</span>` : ''}</button>`; }
+function navKnop([k, n], tel) { const t = tel[k], aan = VIEW === k || (HENK && k === 'evenementen' && VIEW === 'bouw'); return `<button class="ni ${aan ? 'on' : ''}" data-v="${k}" ${aan ? 'aria-current="page"' : ''} title="${n}">${ICON[k]}<span class="lbl">${n}</span>${t && t[0] ? `<span class="n ${t[1] || ''}">${t[0]}</span>` : ''}</button>`; }
 function navHtml(tel) { return GROEPEN.map(([g, l]) => `<div class="groep"><div class="groep-kop">${g}</div>${l.map((i) => navKnop(i, tel)).join('')}</div>`).join(''); }
 function frameTekenen() {
   const tel = navTellers();
@@ -1948,8 +1952,8 @@ function frameTekenen() {
   }
   $('#nav').innerHTML = `${navHtml(tel)}<div class="nav-voet">${SECUNDAIR.map((i) => navKnop(i, tel)).join('')}</div>`;
   $('#blad').innerHTML = navHtml(tel) + `<div class="groep"><div class="groep-kop">Overig</div>${SECUNDAIR.map((i) => navKnop(i, tel)).join('')}</div>`;
-  const ond = HENK ? [['vandaag', 'Vandaag'], ['agenda', 'Agenda'], ['cijfers', 'Cijfers']] : [['overzicht', 'Overzicht'], ['werklijst', 'Werklijst'], ['klanten', 'Klanten'], ['planning', 'Planning']];
-  $('#onder').innerHTML = ond.map(([k, n]) => `<button class="${VIEW === k ? 'on' : ''}" data-v="${k}" ${VIEW === k ? 'aria-current="page"' : ''}>${ICON[k]}${n}${(k === 'klanten' || k === 'vandaag') && tel[k][0] ? `<em>${tel[k][0]}</em>` : ''}</button>`).join('') + `<button class="${ond.some(([k]) => k === VIEW) ? '' : 'on'}" data-meer>${ICON.meer}Meer</button>`;
+  const ond = HENK ? [['vandaag', 'Vandaag'], ['evenementen', 'Evenementen'], ['agenda', 'Agenda'], ['cijfers', 'Cijfers']] : [['overzicht', 'Overzicht'], ['werklijst', 'Werklijst'], ['klanten', 'Klanten'], ['planning', 'Planning']];
+  $('#onder').innerHTML = ond.map(([k, n]) => `<button class="${VIEW === k || (HENK && k === 'evenementen' && VIEW === 'bouw') ? 'on' : ''}" data-v="${k}" ${VIEW === k ? 'aria-current="page"' : ''}>${ICON[k]}${n}${(k === 'klanten' || k === 'vandaag') && tel[k][0] ? `<em>${tel[k][0]}</em>` : ''}</button>`).join('') + `<button class="${ond.some(([k]) => k === VIEW) || (HENK && VIEW === 'bouw') ? '' : 'on'}" data-meer>${ICON.meer}Meer</button>`;
 }
 function hashZetten() { try { history.replaceState(null, '', '#' + (DETAIL != null ? 'evenement-' + DETAIL : VIEW)); } catch (e) {} }
 // ---------- VANDAAG (Henk): alles wat vandaag van Henk nodig is, belangrijkste eerst ----------
