@@ -156,6 +156,22 @@ h1, h2, h3 { margin: 0; }
   .werk.groot .p-body > .p-titelvlak { margin: 0 -32px; padding: 24px 32px 20px; }
   .werk.groot .sectie > h2 { margin: 0 -32px 14px; padding: 10px 32px; }
   .werk.groot .p-voet { padding: 12px 32px; }
+  /* Kop van de evenementpagina donker: je ziet meteen dat je op een eigen pagina bent */
+  .werk.groot .p-kop { background: #2b3430; border-bottom-color: rgba(255,255,255,.08); }
+  .werk.groot .p-kop .btn.gh { color: #fff; }
+  .werk.groot .p-kop .btn.gh:hover { background: rgba(255,255,255,.1); color: #fff; }
+  .werk.groot .p-kop .btn.gh:disabled { color: rgba(255,255,255,.35); background: none; }
+  .werk.groot .p-kop .pos { color: #b9c4bd; }
+  .werk.groot .p-body > .p-titelvlak { background: #2b3430; border-bottom: 0; color: #e3e8e4; }
+  .werk.groot .p-titelvlak .p-soort { color: var(--g300); }
+  .werk.groot .p-titelvlak .p-titel { color: #fff; }
+  .werk.groot .p-titelvlak .p-sub, .werk.groot .p-titelvlak .mu, .werk.groot .p-titelvlak .st small { color: #b9c4bd; }
+  .werk.groot .p-titelvlak .st { color: #e3e8e4; }
+  .werk.groot .p-titelvlak .st.vast, .werk.groot .p-titelvlak .st.geleverd, .werk.groot .p-titelvlak .st.bouw { --d: var(--g400); }
+  .werk.groot .p-titelvlak .st.later, .werk.groot .p-titelvlak .st.afgelopen { color: #b9c4bd; --d: #6b756f; }
+  .werk.groot .p-titelvlak .p-waarom { color: #cfd8d2; }
+  .werk.groot .p-titelvlak .p-waarom b { color: var(--g300); }
+  .werk.groot .p-titelvlak a, .werk.groot .p-titelvlak .link { color: var(--g300); }
   .werk.groot .p-titel { font-size: 24px; }
 }
 main { min-width: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
