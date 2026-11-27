@@ -91,6 +91,14 @@ function statusCel(x) {
   return `<span class="st ${x.s}">${hoofdletter(STATUSNAAM[x.s])}</span>`;
 }
 const KNOP = { bouw: 'Bellen', klaar: 'Mail bekijken', verwacht: 'Mail bekijken', zonder: 'Bellen', zoekt: 'Bekijken', gepland: 'Bekijken' };
+// Mobiel (< 768px): rustiger opbouw. MOB() bepaalt alleen wát er getekend wordt waar dat in CSS niet kan (inklappen).
+const MOB = () => typeof matchMedia === 'function' && matchMedia('(max-width: 767px)').matches;
+// Tweede regel van een rij op mobiel: "evenement · datum" (op desktop verborgen).
+const tweede = (x, wat) => `<span class="m2">${esc(wat)}${x.datum ? ' · ' + datumKort(x.datum) : ''}</span>`;
+// Open/dicht van inklapbare delen onthouden over het opnieuw tekenen heen.
+const KLAP = new Set();
+// Sectie in het evenementpaneel die op mobiel standaard dicht staat.
+const sectieKlap = (sleutel, kop, inhoud) => MOB() ? `<details class="sectie klap" data-klap="${sleutel}" ${KLAP.has(sleutel) ? 'open' : ''}><summary><h2>${kop}</h2></summary>${inhoud}</details>` : `<section class="sectie"><h2>${kop}</h2>${inhoud}</section>`;
 const rijAttr = (x, cls = 'tr r') => `class="${cls}${DETAIL === x.id ? ' sel' : ''}" role="row" tabindex="0" data-open="${x.id}" aria-selected="${DETAIL === x.id}"`;
 const subRegel = (x) => [x.plaats + (x.gem !== x.plaats ? ' · ' + x.gem : ''), x.s === 'bouw' ? (x.aanvrager || 'aanvrager onbekend') : x.org && x.org.naam, x.fase === 'A' && x.s !== 'bouw' ? 'vergunning in aanvraag' : ''].filter(Boolean).map(esc).join(' · ');
 const datumCel = (x) => x.s === 'bouw'
@@ -99,7 +107,7 @@ const datumCel = (x) => x.s === 'bouw'
 function wlRij(x) {
   HUIDIG.push(x.id);
   return `<div ${rijAttr(x)}><div class="cel c-kans" role="cell">${kansCel(x)}</div>
-<div class="cel h c-naam" role="cell"><b>${esc(x.naam)}</b><span>${subRegel(x)}</span></div>
+<div class="cel h c-naam" role="cell"><b>${esc(x.naam)}</b><span>${subRegel(x)}</span>${tweede(x, x.plaats)}</div>
 <div class="cel t c-dat" role="cell">${datumCel(x)}</div>
 <div class="cel c-km num ${x.km > 100 ? 'ver' : ''}" role="cell">${kmTekst(x)}</div>
 <div class="cel c-st" role="cell">${statusCel(x)}</div>
@@ -145,7 +153,7 @@ function klRij(x) {
   HUIDIG.push(x.id);
   const wanneer = x.s === 'verstuurd' || x.s === 'antwoord' ? 'aanbod ' + sindsTekst(x.verstuurd) : x.s === 'geboekt' ? 'leveren ' + overTekst(x.datum) : 'geleverd ' + sindsTekst(x.datum);
   const bet = betTekst(x);
-  return `<div ${rijAttr(x)}><div class="cel h c-naam" role="cell"><b>${esc(x.org.naam)}</b><span>${esc(x.naam)} · ${esc(x.plaats)}</span></div>
+  return `<div ${rijAttr(x)}><div class="cel h c-naam" role="cell"><b>${esc(x.org.naam)}</b><span>${esc(x.naam)} · ${esc(x.plaats)}</span>${tweede(x, x.naam)}</div>
 <div class="cel c-fase" role="cell">${faseCel(x)}</div>
 <div class="cel t c-dat" role="cell"><b>${datumKort(x.datum)}</b><span>${wanneer}</span></div>
 <div class="cel c-rek num re" role="cell">${x.bokken * REKKEN_BOK}</div>
@@ -334,7 +342,7 @@ const KTABS = [
 const ksort = (k) => (a, b) => k === 'verstuurd' ? (a.verstuurd || '').localeCompare(b.verstuurd || '') : k === 'geleverd' ? b.datum.localeCompare(a.datum) : a.datum.localeCompare(b.datum);
 function deal(x) {
   HUIDIG.push(x.id);
-  return `<div ${rijAttr(x, 'deal r')}><b>${esc(x.org.naam)}</b><span class="ev">${esc(x.naam)} · ${esc(x.plaats)}</span>
+  return `<div ${rijAttr(x, 'deal r')}><b>${esc(x.org.naam)}</b><span class="ev">${esc(x.naam)} · ${esc(x.plaats)}</span>${tweede(x, x.naam)}
 <div class="dr"><span class="mu">${datumKort(x.datum)}</span><b>${euro(bedrag(x))}</b></div>${x.s === 'antwoord' && x.antwoord ? `<q>${esc(x.antwoord)}</q>` : ''}${x.boeking && x.boeking.betaling === 'factuur' ? `<div class="dr"><span class="mu">${betTekst(x)}</span></div>` : ''}
 ${['verstuurd', 'antwoord'].includes(x.s) || x.volgend ? `<div class="dact">${klantActie(x)}</div>` : ''}</div>`;
 }
@@ -619,7 +627,7 @@ function herinneringHtml(x) {
 <div class="antw-voet"><button class="btn p" data-a="herinner-stuur" data-id="${x.id}">${ICON.mail} Versturen uit Outlook</button><button class="btn" id="hernee" onclick="dicht()">Annuleren</button><span class="ffout" id="herfout" role="alert"></span></div></div>`;
 }
 const kansSectie = (x) => { if (KLANT.includes(x.s)) return ''; const k = kans(x);
-  return `<section class="sectie"><h2>Waarom deze kans<span class="rechts">${k.score} van 100</span></h2><ul class="redenen"><li class="basis"><span class="w">40</span><span>startwaarde</span></li>${k.redenen.map(([n, t]) => `<li class="${n > 0 ? 'plus' : 'min'}"><span class="w">${n > 0 ? '+' : '−'}${Math.abs(n)}</span><span>${esc(t)}</span></li>`).join('')}</ul></section>`; };
+  return sectieKlap('kans', `Waarom deze kans<span class="rechts">${k.score} van 100</span>`, `<ul class="redenen"><li class="basis"><span class="w">40</span><span>startwaarde</span></li>${k.redenen.map(([n, t]) => `<li class="${n > 0 ? 'plus' : 'min'}"><span class="w">${n > 0 ? '+' : '−'}${Math.abs(n)}</span><span>${esc(t)}</span></li>`).join('')}</ul>`); };
 const pubLink = (x, t) => x.pub ? `<a href="https://zoek.officielebekendmakingen.nl/${esc(x.pub)}.html" target="_blank" rel="noopener">${t} ↗</a>` : '';
 function paneelKop(x) {
   const pos = STAPEL.indexOf(x.id), vorig = pos > 0 ? STAPEL[pos - 1] : null, volg = pos >= 0 && pos < STAPEL.length - 1 ? STAPEL[pos + 1] : null;
@@ -683,8 +691,8 @@ ${x.fase === 'A' ? '<dt>Vergunning</dt><dd>aangevraagd, gemeente beslist nog</dd
 ${x.gevonden ? `<dt>Gevonden</dt><dd>${x.gevonden === VANDAAG ? 'vannacht, door de scan' : datumLang(x.gevonden)}</dd>` : ''}
 ${x.vorig ? `<dt>Eerdere edities</dt><dd>${esc(x.vorig.replace(' eerdere edities gevonden', ''))} gevonden</dd>` : ''}
 ${x.pub ? `<dt>Bron</dt><dd>${pubLink(x, 'vergunning bekijken')}</dd>` : ''}</dl></section>`;
-  const org = `<section class="sectie"><h2>Organisator</h2>${!x.org ? '<p class="mu" style="margin:0;font-size:13px">Nog niet gevonden. De contactzoeker kijkt in lokaal nieuws, kalenders, sportbonden en vorige jaren.</p>'
-    : `<dl class="eig"><dt>Naam</dt><dd>${esc(o.naam)}</dd>${o.email ? `<dt>Mail</dt><dd>${esc(o.email)} <span class="mu">· ${esc(o.soort)}</span></dd>` : '<dt>Mail</dt><dd class="mu">geen mailadres gevonden</dd>'}${o.bron ? `<dt>Gevonden op</dt><dd>${esc(o.bron)}</dd>` : ''}${o.zek ? `<dt>Zekerheid</dt><dd>${o.zek}%</dd>` : ''}${o.formulier ? `<dt>Formulier</dt><dd>${esc(o.formulier)}</dd>` : ''}${o.telefoon ? `<dt>Telefoon</dt><dd>${belbaar(esc(o.telefoon))}</dd>` : ''}</dl>`}</section>`;
+  const org = sectieKlap('organisator', 'Organisator', `${!x.org ? '<p class="mu" style="margin:0;font-size:13px">Nog niet gevonden. De contactzoeker kijkt in lokaal nieuws, kalenders, sportbonden en vorige jaren.</p>'
+    : `<dl class="eig"><dt>Naam</dt><dd>${esc(o.naam)}</dd>${o.email ? `<dt>Mail</dt><dd>${esc(o.email)} <span class="mu">· ${esc(o.soort)}</span></dd>` : '<dt>Mail</dt><dd class="mu">geen mailadres gevonden</dd>'}${o.bron ? `<dt>Gevonden op</dt><dd>${esc(o.bron)}</dd>` : ''}${o.zek ? `<dt>Zekerheid</dt><dd>${o.zek}%</dd>` : ''}${o.formulier ? `<dt>Formulier</dt><dd>${esc(o.formulier)}</dd>` : ''}${o.telefoon ? `<dt>Telefoon</dt><dd>${belbaar(esc(o.telefoon))}</dd>` : ''}</dl>`}`);
   const voortgang = isKlant ? `<section class="sectie"><h2>Voortgang</h2><div class="stappen">${FASEN.map((s, j) => { const i = faseIdx(x); return `<div class="${j < i || (j === i && x.s !== 'antwoord') ? 'ok' : j === i ? 'nu' : ''}">${s}</div>`; }).join('')}</div>
 <dl class="eig" style="margin-top:12px">${x.verstuurd ? `<dt>Aanbod</dt><dd>verstuurd ${sindsTekst(x.verstuurd)}${x.herinnerd ? ', herinnering ' + sindsTekst(x.herinnerd) : ''}</dd>` : ''}
 ${x.boeking ? `<dt>Geboekt</dt><dd>${euro(x.boeking.prijs)} · ${x.bokken * REKKEN_BOK} rekken</dd><dt>Betaling</dt><dd>${x.boeking.betaling === 'factuur' ? `${betTekst(x)}${x.boeking.betaald ? ' op ' + datumKort(x.boeking.betaald) : ''}${x.boeking.factuurMail ? ' · ' + esc(x.boeking.factuurMail) : ''}${x.boeking.inkoop ? ' · kenmerk ' + esc(x.boeking.inkoop) : ''}` : 'iDEAL, betaald'}</dd><dt>Lossen</dt><dd>${esc(x.boeking.los)}${x.boeking.punt && x.boeking.punt.lat != null ? ` · <a href="https://www.google.com/maps/dir/?api=1&destination=${x.boeking.punt.lat},${x.boeking.punt.lng}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>${x.boeking.bouw && x.boeking.bouw.belMe ? '<dt>Bouwen</dt><dd><span class="open">Klant wil even bellen</span> over waar de rekken komen</dd>' : ''}${x.boeking.bouw && x.boeking.bouw.lijnen && x.boeking.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${stukTekst(x.boeking.bouw.lijnen)} getekend${x.boeking.bouw.meter ? `, samen ± ${x.boeking.bouw.meter} m` : ''}${x.boeking.bouw.adres ? ' · ' + esc(x.boeking.bouw.adres) : ''}<div class="bouwkaart" id="pbouw" data-id="${x.id}">${bouwSvg(x.boeking)}<span class="bk-leg"><i class="l"></i>rekken <i class="p"></i>lossen</span></div></dd>` : ''}<dt>Op de dag</dt><dd>${belbaar(esc(x.boeking.contact))}</dd>` : ''}
@@ -983,24 +991,27 @@ function hashZetten(nieuw) { try { const h = '#' + (DETAIL != null ? 'evenement-
 function vandaagScherm() {
   const V = voorraad(), vast = V.klaar.filter((x) => x.vast), mails = V.klaar.filter((x) => !x.vast);
   const bellen = [...V.zonder, ...V.bouwBellen], lev7 = V.leveren.filter((x) => dagenTot(x.datum) <= 7), fOpen = V.facturen.reduce((s, x) => s + bedrag(x), 0);
-  const rij = (x, wat, knop) => { HUIDIG.push(x.id); return `<div ${rijAttr(x)}><div class="cel h c-naam" role="cell"><b>${esc(x.org ? x.org.naam : x.naam)}</b><span>${esc(x.org ? x.naam : x.plaats)}${wat ? ' · ' + wat : ''}</span></div><div class="cel c-dat t" role="cell"><b>${x.datum ? datumKort(x.datum) : ''}</b></div><div class="cel act" role="cell">${knop}</div></div>`; };
+  const rij = (x, wat, knop) => { HUIDIG.push(x.id); return `<div ${rijAttr(x)}><div class="cel h c-naam" role="cell"><b>${esc(x.org ? x.org.naam : x.naam)}</b><span>${esc(x.org ? x.naam : x.plaats)}${wat ? ' · ' + wat : ''}</span>${tweede(x, x.org ? x.naam : x.plaats)}</div><div class="cel c-dat t" role="cell"><b>${x.datum ? datumKort(x.datum) : ''}</b></div><div class="cel act" role="cell">${knop}</div></div>`; };
+  const mob = MOB(), nNieuw = DB.alle().filter((x) => x.gevonden === VANDAAG && x.s !== 'weg').length;
   const groep = (cls, titel, uitleg, l, fn, max, knop = '') => l.length ? `<section class="blok taakblok ${cls}" aria-label="${esc(titel)}"><div class="tb-kop"><span class="tb-n">${l.length}</span><h2>${titel}</h2><span class="tb-uitleg">${uitleg}</span><div class="rechts">${knop}</div></div><div class="sub-lijst">${l.slice(0, max).map(fn).join('')}${l.length > max ? `<details class="nog"><summary class="blok-voet link">Nog ${l.length - max} tonen</summary>${l.slice(max).map(fn).join('')}</details>` : ''}</div></section>` : '';
+  // Mobiel: "Als je tijd hebt" als één blok met per soort één tikbare regel, die uitklapt.
+  const klap = (sleutel, label, l, fn, onder = '') => l.length ? `<details class="klapregel" data-klap="${sleutel}" ${KLAP.has(sleutel) ? 'open' : ''}><summary>${label}</summary><div class="sub-lijst">${l.map(fn).join('')}</div>${onder}</details>` : '';
   const btn = (a, x, t, p = '') => `<button class="btn sm ${p}" data-a="${a}" data-id="${x.id}" tabindex="-1">${t}</button>`, opn = (x, t) => `<button class="btn sm" data-open="${x.id}" tabindex="-1">${t}</button>`;
   const eerst = V.antwoord.length + lev7.length + vast.length + V.facturen.length, later = mails.length + V.herinner.length + bellen.length, n = eerst + later;
-  const kern = `<div class="kern"><div><span>Eerst doen</span><b>${eerst}</b></div><div><span>Als je tijd hebt</span><b>${later}</b></div><div><span>Facturen open</span><b class="${fOpen ? 'let' : ''}">${euro(fOpen)}</b></div></div>`;
+  const kern = `<div class="kern niet-m"><div><span>Eerst doen</span><b>${eerst}</b></div><div><span>Als je tijd hebt</span><b>${later}</b></div><div><span>Facturen open</span><b class="${fOpen ? 'let' : ''}">${euro(fOpen)}</b></div></div>`;
   const kop = (t, u) => `<div class="cc-label"><b>${t}</b> ${u}</div>`;
   return `${paginakop('vandaag', { doel: `Demo-dag: ${datumLang(VANDAAG)}. Dit is wat er vandaag van jou nodig is, belangrijkste eerst.`, extra: kern })}
 <div class="inhoud henk-vandaag">
-${(() => { const n = DB.alle().filter((x) => x.gevonden === VANDAAG && x.s !== 'weg').length; return n ? `<div class="scanbalk"><span class="live"></span><span><b>${n} nieuwe vergunningen</b> gevonden in de scan van vannacht</span><button class="btn sm" data-v="evenementen" data-gev="vandaag">Bekijk de nieuwe</button></div>` : ''; })()}
+${(() => { const n = nNieuw; return n && !mob ? `<div class="scanbalk" data-v="evenementen" data-gev="vandaag"><span class="live"></span><span><b>${n} nieuwe vergunningen</b> gevonden in de scan van vannacht</span><button class="btn sm" data-v="evenementen" data-gev="vandaag">Bekijk de nieuwe</button></div>` : ''; })()}
 ${eerst ? kop('Eerst', 'klanten en klussen die op jou wachten') : ''}
 ${groep('urg', 'Klanten wachten op je antwoord', 'reactie staat in je Outlook', V.antwoord, (x) => rij(x, x.antwoord ? `<q>${esc(x.antwoord)}</q>` : '', btn('outlook', x, `${ICON.antwoord} Antwoorden`, 'p')), 5)}
 ${groep('', 'Leveringen deze week', 'werkbon voor wie rijdt', lev7, (x) => rij(x, `${x.bokken * REKKEN_BOK} rekken`, btn('werkbon', x, 'Werkbon')), 5)}
 ${groep('p', 'Vaste klanten: mail klaar', 'vorig jaar geleverd', vast, (x) => rij(x, `vorig jaar ${x.vast.rekken} rekken`, opn(x, `${ICON.mail} Mail bekijken`)), 5)}
 ${groep('', 'Facturen open', 'geleverd op factuur, nog niet betaald', V.facturen.sort(dv), (x) => rij(x, euro(bedrag(x)), btn('betaald', x, 'Betaald')), 5)}
-${later ? kop('Als je tijd hebt', 'nieuwe klanten, op volgorde van kans') : ''}
-${groep('p', 'Nieuwe klanten mailen', 'hoogste kans eerst', mails, (x) => rij(x, `kans ${kans(x).score}${x.km > 100 ? ` · ± ${x.km} km` : ''}`, opn(x, `${ICON.mail} Mail bekijken`)), 5, mails.length ? `<button class="btn sm wit" data-a="start-wl">${ICON.mail} Doorwerken (${V.klaar.length})</button>` : '')}
+${later || (mob && nNieuw) ? kop('Als je tijd hebt', 'nieuwe klanten, op volgorde van kans') : ''}
+${mob ? (later || nNieuw ? `<section class="blok klapblok">${nNieuw ? `<button class="klapregel-link" data-v="evenementen" data-gev="vandaag">${nNieuw} nieuwe vergunningen van vannacht</button>` : ''}${klap('mails', `${mails.length} nieuwe klanten mailen`, mails, (x) => rij(x, '', ''), mails.length ? `<div class="klap-voet"><button class="btn p" data-a="start-wl">${ICON.mail} Doorwerken (${V.klaar.length})</button></div>` : '')}${klap('herinner', `${V.herinner.length} ${V.herinner.length === 1 ? 'herinnering' : 'herinneringen'} sturen`, V.herinner, (x) => rij(x, '', ''))}${klap('bellen', `${bellen.length} om te bellen`, bellen, (x) => rij(x, '', ''))}</section>` : '') : `${groep('p', 'Nieuwe klanten mailen', 'hoogste kans eerst', mails, (x) => rij(x, `kans ${kans(x).score}${x.km > 100 ? ` · ± ${x.km} km` : ''}`, opn(x, `${ICON.mail} Mail bekijken`)), 5, mails.length ? `<button class="btn sm wit" data-a="start-wl">${ICON.mail} Doorwerken (${V.klaar.length})</button>` : '')}
 ${groep('', 'Herinnering sturen', 'aanbod langer dan een week zonder reactie', V.herinner, (x) => rij(x, 'aanbod ' + sindsTekst(x.verstuurd), btn('herinner', x, `${ICON.herhaal} Herinnering`)), 3)}
-${groep('', 'Bellen', 'geen mailadres, of een bouwproject', bellen, (x) => rij(x, x.s === 'bouw' ? 'bouwproject' : 'geen mailadres', opn(x, `${ICON.bel} Bekijken`)), 3)}
+${groep('', 'Bellen', 'geen mailadres, of een bouwproject', bellen, (x) => rij(x, x.s === 'bouw' ? 'bouwproject' : 'geen mailadres', opn(x, `${ICON.bel} Bekijken`)), 3)}`}
 ${n || lev7.length ? '' : `<section class="blok">${leeg('Niets te doen vandaag.')}</section>`}</div>`;
 }
 // ---------- AGENDA (Henk): leveringen + voorraad + werkbon ----------
@@ -1076,6 +1087,7 @@ function dicht() { $('#scherm').classList.remove('open'); $('.venster').classLis
 const dialoogOpen = () => $('#scherm').classList.contains('open');
 const meerDicht = () => $('#meerblad').classList.remove('open');
 
+document.addEventListener('toggle', (e) => { const d = e.target; if (d && d.dataset && d.dataset.klap) { if (d.open) KLAP.add(d.dataset.klap); else KLAP.delete(d.dataset.klap); } }, true);
 document.addEventListener('click', (e) => {
   document.querySelectorAll('details.kolfilter[open]').forEach((d) => { if (!d.contains(e.target)) d.open = false; });
   if (!e.target.closest('.globaal') && !e.target.closest('[data-zoekm]')) { $('#zoekres') && $('#zoekres').classList.remove('on'); $('#globaal') && $('#globaal').classList.remove('mopen'); }
