@@ -111,6 +111,18 @@ h1, h2, h3 { margin: 0; }
 .antw .mail .mb { padding: 0; }
 .antw textarea { width: 100%; border: 0; border-radius: 0; padding: 12px; font: 14px/1.55 var(--tekst); resize: vertical; min-height: 280px; }
 .antw-voet { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.antw .her-onder { padding: 4px 12px 12px; border-top: 1px dashed var(--lijn2); }
+.antw .her-onder .mknop { cursor: default; margin: 10px 0 2px; }
+/* Schetsen lossen en opbouwen: twee naast elkaar, op smalle schermen onder elkaar */
+.schetsen { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.schets { margin: 0; border: 1px solid var(--lijn2); border-radius: var(--rad); overflow: hidden; background: var(--vlak); }
+.schets svg { display: block; width: 100%; height: auto; }
+.schets figcaption { display: grid; gap: 1px; padding: 7px 10px 8px; border-top: 1px solid var(--lijn); font-size: 12.5px; }
+.schets figcaption b { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.schets figcaption span { color: var(--ink3); }
+.sl-pin { width: 9px; height: 9px; border-radius: 50%; background: var(--urg); flex: none; }
+.sl-rij { width: 16px; height: 4px; background: #e8b800; box-shadow: 0 0 0 1px rgba(0,0,0,.4); flex: none; }
+.werkbon .schetsen { margin-top: 14px; }
 .scanblok .link { color: var(--x-acc); font-size: 13px; }
 @media (max-width: 767px) { .scanblok { margin-left: 0; padding-left: 0; border-left: 0; } }
 @keyframes radar-draai { to { transform: rotate(360deg); } }
@@ -704,7 +716,7 @@ details.nog[open] > summary { display: none; }
 .kp-regel { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 @keyframes flits { 0% { background: #fff3a6; box-shadow: 0 0 0 4px #fff3a6; } 100% { background: transparent; box-shadow: 0 0 0 4px transparent; } }
 .flits { animation: flits 1.1s ease-out; }
-@media (max-width: 600px) { .seg.seg5 { grid-template-columns: repeat(2, 1fr); } .seg.seg5 > * { border-top: 1px solid var(--lijn2); } .seg.seg5 .seg-zelf { grid-column: 1 / -1; flex-direction: row; gap: 10px; padding: 9px; } .trans { grid-template-columns: 1fr; gap: 6px; } }
+@media (max-width: 600px) { .seg.seg5 { grid-template-columns: repeat(2, 1fr); } .seg.seg5 > * { border-top: 1px solid var(--lijn2); } .seg.seg5 > :nth-child(odd) { border-left: 0; } .seg.seg5 > :nth-child(-n+2) { border-top: 0; } .seg.seg5 .seg-zelf { grid-column: 1 / -1; flex-direction: row; gap: 10px; padding: 9px; } .trans { grid-template-columns: 1fr; gap: 6px; } }
 @media (prefers-reduced-motion: reduce) { .flits { animation: none; } }
 .mail { border: 1px solid #3a4046; border-radius: var(--rad); font-size: 13px; line-height: 1.55; overflow: hidden; }
 /* Mailkop donkergrijs: je ziet meteen dat dit een e-mail is */
@@ -1991,6 +2003,20 @@ ${v.length > 1 ? `<div class="seg antw-keus" role="group" aria-label="Kies een a
 <p class="kort">Vul de stukken tussen [ ] in en pas aan wat je wilt. RekRadar verstuurt niets: je verstuurt zelf vanuit Outlook.</p>
 <div class="antw-voet"><button class="btn p" data-a="antw-outlook" data-id="${x.id}">${ICON.mail} Openen in Outlook</button><span class="ffout" id="antwfout" role="alert"></span></div></div>`;
 }
+// HERINNERING: Henk ziet eerst de mail en kan hem aanpassen. Pas na "Versturen uit Outlook" gaat hij weg.
+function herinneringTekst(x) {
+  const o = x.org || {}, m = x.mail || { bokken: x.bokken, transport: x.transport }, t = transportVan(m), r = Math.round(m.bokken * REKKEN_BOK);
+  return `Beste ${o.naam || ''},\n\nEen tijdje geleden stuurde ik je een voorstel voor fietsenrekken bij ${x.naam}. Ik ben benieuwd of het jullie wat lijkt.\n\nHet voorstel staat nog: ${r} fietsenrekken voor ${euro(rekPrijs(m.bokken))}${t ? `, plus ${euro(t)} transportkosten` : ''} (excl. btw)${t ? '' : ', inclusief leveren en ophalen'}. Boeken kan via de knop hieronder; daar geef je ook door waar we kunnen lossen.\n\nAl iets anders geregeld? Laat het even weten, dan hoor je verder niets meer van ons. Liever eerst bellen kan ook: 0183 851 700.\n\nMet vriendelijke groet,\nHenk van der Zouwen\nFietsenrekhuren.com, Almkerk`;
+}
+function herinneringHtml(x) {
+  const o = x.org || {};
+  return `<div class="antw" data-id="${x.id}">
+<div class="mail"><div class="mk"><div class="mk-label">${ICON.mail}E-mail · herinnering</div><span>Aan</span><b style="font-weight:500">${esc(o.email)}</b><span>Onderwerp</span><b style="font-weight:500">Re: Fietsenrekken bij ${esc(x.naam)}?</b></div>
+<div class="mb"><textarea id="hertekst" class="in" rows="14" aria-label="Tekst van de herinnering">${esc(herinneringTekst(x))}</textarea>
+<div class="her-onder"><span class="mknop" aria-hidden="true">Bekijk en boek</span><small>Je krijgt deze mail omdat dit adres openbaar staat${o.bron ? ' op ' + esc(o.bron.split('/')[0]) : ''}. Geen mail meer van ons? Afmelden.</small></div></div></div>
+<p class="kort">Aanbod verstuurd ${sindsTekst(x.verstuurd)}. Pas de tekst aan als je wilt. Er gaat niets weg tot je op versturen klikt; daarna kan er geen tweede herinnering meer.</p>
+<div class="antw-voet"><button class="btn p" data-a="herinner-stuur" data-id="${x.id}">${ICON.mail} Versturen uit Outlook</button><button class="btn" id="hernee" onclick="dicht()">Annuleren</button><span class="ffout" id="herfout" role="alert"></span></div></div>`;
+}
 const kansSectie = (x) => { if (KLANT.includes(x.s)) return ''; const k = kans(x);
   return `<section class="sectie"><h2>Waarom deze kans<span class="rechts">${k.score} van 100</span></h2><ul class="redenen"><li class="basis"><span class="w">40</span><span>startwaarde</span></li>${k.redenen.map(([n, t]) => `<li class="${n > 0 ? 'plus' : 'min'}"><span class="w">${n > 0 ? '+' : '−'}${Math.abs(n)}</span><span>${esc(t)}</span></li>`).join('')}</ul></section>`; };
 const pubLink = (x, t) => x.pub ? `<a href="https://zoek.officielebekendmakingen.nl/${esc(x.pub)}.html" target="_blank" rel="noopener">${t} ↗</a>` : '';
@@ -2074,7 +2100,7 @@ ${x.volgend ? (() => { const v = DB.vind(x.volgend); return `<dt>Volgend jaar</d
   const afsluit = ['verstuurd', 'antwoord', 'zonder'].includes(x.s) ? `<div class="meer"><button class="btn" data-a="telgeboekt" data-id="${x.id}">Telefonisch geboekt</button>${['verstuurd', 'antwoord'].includes(x.s) ? `<select class="sel" data-verloren="${x.id}" aria-label="Verloren, met reden"><option value="">Verloren…</option>${['Te duur', 'Al geregeld', 'Geen interesse', 'Geen reactie'].map((r) => `<option>${r}</option>`).join('')}</select>` : ''}</div>` : '';
   const meer = open ? `<div class="meer">${actief(x) ? `<button class="btn" data-a="later" data-id="${x.id}">Later</button>` : `<button class="btn" data-a="terughalen" data-id="${x.id}">Terughalen</button>`}<button class="btn" data-a="geregeld" data-id="${x.id}">Al geregeld</button><button class="btn" data-a="weg" data-id="${x.id}">Niet relevant</button></div>` : '';
   return `${paneelKop(x)}<div class="p-body">${titelVlak(isKlant ? 'Klant · ' + esc(o.naam || '') : 'Evenement', x, `${esc(x.plaats)} · ${datumKort(x.datum)}`, `${statusCel(x)}${isKlant ? `<b class="num">${euro(bedrag(x))}</b>` : ''}${x.km != null ? `<span class="mu">${kmTekst(x)}</span>` : ''}`)}
-<div class="p-inhoud">${notes}${voortgang}${aantal}${mail}${org}${gegevens}${kansSectie(x)}${hulp}</div></div>
+<div class="p-inhoud">${notes}${voortgang}${schetsenHtml(x) ? `<section class="sectie"><h2>Lossen en opbouwen</h2>${schetsenHtml(x)}</section>` : ''}${aantal}${mail}${org}${gegevens}${kansSectie(x)}${hulp}</div></div>
 ${hoofdKnop || meer || afsluit ? `<div class="p-voet">${hoofdKnop}${afsluit}${meer}</div>` : ''}`;
 }
 function bouwPaneel(x) {
@@ -2217,6 +2243,48 @@ function bouwSvg(b) {
   const pinPt = punt ? (schets ? (punt.x != null ? [punt.x, punt.y] : null) : [punt.lat, punt.lng]) : null;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schets van losplek en bouwplek">${lijnen.map((l) => `<polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#1b1e20" stroke-opacity=".5" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#e8b800" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}${pinPt ? (() => { const [a, c] = xy(pinPt).split(',').map(Number); return `<circle cx="${a}" cy="${c}" r="7" fill="#b3261e" stroke="#fff" stroke-width="2.5"/><text x="${a + 11}" y="${c + 4}" font-size="11" font-weight="600" fill="#1b1e20">lossen</text>`; })() : ''}</svg>`;
 }
+// ---------- voorbeeldschets lossen + opbouwen (verzonnen boekingen zonder getekende kaart) ----------
+// Vier plattegronden die passen bij de losplek-omschrijving. Coördinaten in een vlak van 320 × 190.
+// Rijen rekken: 1 rij per halve bok, hoogstens 4. Het is een voorbeeld van wat de klant bij het boeken intekent.
+const PLATTEGROND = {
+  plein: { wegen: [[0, 152, 320, 26], [262, 0, 26, 152]], gebouwen: [[10, 8, 70, 38], [90, 8, 60, 38], [160, 8, 90, 38], [10, 56, 40, 86]], vlak: [62, 58, 190, 84, 'plein'], wl: [[275, 140, 'achteringang']],
+    los: [275, 92, 90], pin: [256, 92], rij: (i) => [150, 70 + i * 16, 238, 70 + i * 16] },
+  kerk: { wegen: [[0, 12, 320, 26], [0, 38, 22, 152]], gebouwen: [[40, 62, 88, 96, 'kerk'], [68, 46, 30, 18], [252, 156, 58, 30]], vlak: [150, 56, 156, 92, 'parkeerplaats', 1], wl: [],
+    los: [196, 25, 0], pin: [196, 64], rij: (i) => [168, 140 - i * 12, 288, 140 - i * 12] },
+  ingang: { wegen: [[0, 152, 320, 26]], gebouwen: [[196, 134, 16, 13], [214, 134, 16, 13]], vlak: [20, 12, 280, 120, 'evenemententerrein'], wl: [[138, 147, 'hoofdingang', 'end'], [222, 128, 'containers']],
+    los: [150, 165, 0], pin: [150, 140], rij: (i) => [36, 118 - i * 13, 128, 118 - i * 13], poort: [142, 178] },
+  gemeentehuis: { wegen: [[0, 122, 320, 26], [204, 0, 24, 122]], gebouwen: [[22, 22, 116, 84, 'gemeentehuis'], [240, 16, 70, 42], [240, 66, 70, 44], [20, 158, 120, 28], [170, 158, 140, 28]], vlak: [144, 22, 54, 92, 'pleintje'], wl: [],
+    los: [216, 60, 90], pin: [199, 60], rij: (i) => [156 + i * 11, 46, 156 + i * 11, 108] },
+};
+const plattegrondVan = (los) => /plein|markt/i.test(los) ? 'plein' : /kerk|parkeer/i.test(los) ? 'kerk' : /ingang|container|start/i.test(los) ? 'ingang' : /gemeentehuis|zijstraat/i.test(los) ? 'gemeentehuis' : 'plein';
+const rijenVan = (b) => b <= 0.5 ? 1 : b <= 1 ? 2 : b <= 2 ? 3 : 4;
+function schetsSvg(x, nadruk) {
+  const b = x.boeking, t = PLATTEGROND[plattegrondVan(b.los)], n = rijenVan(x.bokken), los = nadruk === 'los';
+  const [vx, vy, vw, vh, vl, park] = t.vlak, [lx, ly, lr] = t.los, [px, py] = t.pin;
+  const rijen = Array.from({ length: n }, (_, i) => t.rij(i));
+  const lijn = ([a, c, d, e]) => `<line x1="${a}" y1="${c}" x2="${d}" y2="${e}" stroke="#1b1e20" stroke-opacity=".55" stroke-width="8" stroke-linecap="round"/><line x1="${a}" y1="${c}" x2="${d}" y2="${e}" stroke="#e8b800" stroke-width="4.5" stroke-linecap="round"/>`;
+  const truck = `<g transform="translate(${lx} ${ly}) rotate(${lr})"><rect x="-20" y="-8" width="28" height="16" rx="2" fill="#fff" stroke="#1b1e20" stroke-width="1.5"/><rect x="9" y="-7" width="10" height="14" rx="2" fill="#5b6066"/></g>`;
+  const tekst = (a, c, w, kl = '#5b6066', anker = 'middle') => `<text x="${a}" y="${c}" font-size="10" fill="${kl}" text-anchor="${anker}" font-family="inherit">${w}</text>`;
+  return `<svg viewBox="0 0 320 190" role="img" aria-label="${los ? 'Schets: waar de vrachtwagen lost' : 'Schets: waar de rekken komen'}">
+<rect width="320" height="190" fill="#eceee6"/>
+${t.wegen.map(([a, c, w, h]) => `<rect x="${a}" y="${c}" width="${w}" height="${h}" fill="#cfd1cb"/>`).join('')}
+<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="#f8f7f2" stroke="#a9aca6" stroke-dasharray="4 3"/>
+${park ? Array.from({ length: 9 }, (_, i) => `<line x1="${vx + 12 + i * 16}" y1="${vy + 4}" x2="${vx + 12 + i * 16}" y2="${vy + 18}" stroke="#c9cbc5"/>`).join('') : ''}
+${tekst(vx + 6, vy + (park ? 32 : 14), vl, '#8a8f94', 'start')}
+${t.gebouwen.map(([a, c, w, h, nm]) => `<rect x="${a}" y="${c}" width="${w}" height="${h}" fill="#b8bbb6"/>${nm ? tekst(a + w / 2, c + h / 2 + 3, nm, '#3a3f44') : ''}`).join('')}
+${t.wl.map(([a, c, w, anker]) => tekst(a, c, w, '#5b6066', anker)).join('')}
+<g opacity="${los ? 0.28 : 1}">${rijen.map(lijn).join('')}</g>
+<g opacity="${los ? 1 : 0.35}">${truck}${los ? `<circle cx="${px}" cy="${py}" r="14" fill="#b3261e" fill-opacity=".14"/>` : ''}<circle cx="${px}" cy="${py}" r="6.5" fill="#b3261e" stroke="#fff" stroke-width="2.5"/></g>
+</svg>`;
+}
+// Sectie in het paneel en op de werkbon: twee schetsen naast elkaar, lossen en opbouwen.
+function schetsenHtml(x) {
+  const b = x.boeking; if (!b || b.telefonisch || (b.punt) || (b.bouw && (b.bouw.lijnen || []).length)) return '';
+  const n = rijenVan(x.bokken), r = x.bokken * REKKEN_BOK;
+  return `<div class="schetsen"><figure class="schets">${schetsSvg(x, 'los')}<figcaption><b><i class="sl-pin"></i>Lossen</b><span>${esc(b.los)}</span></figcaption></figure>
+<figure class="schets">${schetsSvg(x, 'bouw')}<figcaption><b><i class="sl-rij"></i>Opbouwen</b><span>${r} rekken in ${n} ${n === 1 ? 'rij' : 'rijen'}</span></figcaption></figure></div>
+<p class="kort">Voorbeeldschets bij een verzonnen boeking. Bij een echte boeking tekent de klant dit zelf op de luchtfoto: de losplek met een pin en de rijen met lijnen.</p>`;
+}
 async function naPaneel() {
   if (pKaart) { pKaart.remove(); pKaart = null; }
   const vak = $('#pbouw'); if (!vak) return; const x = DB.vind(Number(vak.dataset.id)); if (!x || !x.boeking || !x.boeking.punt || x.boeking.punt.lat == null || (x.boeking.bouw && x.boeking.bouw.schets)) return;
@@ -2332,7 +2400,7 @@ function werkbonHtml(x) {
   return `<div class="werkbon"><div class="wb-kop"><div><b>${esc(x.naam)}</b><span>${hoofdletter(datumLang(x.datum))} · ${esc(x.plaats)}</span></div><b class="wb-n">${x.bokken * REKKEN_BOK} rekken</b></div>
 <dl class="eig"><dt>Klant</dt><dd>${esc(x.org ? x.org.naam : '')}</dd><dt>Lossen</dt><dd>${esc(b.los || 'nog doorgeven')}${route ? ` · <a href="${route}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>
 ${b.bouw && b.bouw.belMe ? '<dt>Bouwen</dt><dd>Nog afspreken: klant wil even bellen</dd>' : ''}${b.bouw && b.bouw.lijnen && b.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${b.bouw.lijnen.length} ${b.bouw.lijnen.length === 1 ? 'rij' : 'rijen'}${b.bouw.meter ? `, samen ± ${b.bouw.meter} m` : ''}<div class="bouwkaart">${bouwSvg(b)}</div></dd>` : ''}
-<dt>Contact op de dag</dt><dd>${belbaar(esc(b.contact || 'nog doorgeven'))}</dd><dt>Afstand</dt><dd>${kmTekst(x)} vanaf Almkerk</dd><dt>Betaling</dt><dd>${betTekst(x)}</dd></dl>
+<dt>Contact op de dag</dt><dd>${belbaar(esc(b.contact || 'nog doorgeven'))}</dd><dt>Afstand</dt><dd>${kmTekst(x)} vanaf Almkerk</dd><dt>Betaling</dt><dd>${betTekst(x)}</dd></dl>${schetsenHtml(x)}
 <div class="wb-voet noprint"><button class="btn p" onclick="print()">Printen</button><span class="mu klein">Geef dit blad aan wie levert. RekRadar verstuurt niets.</span></div></div>`;
 }
 const SCHERMEN = { vandaag: vandaagScherm, agenda: agendaScherm, cijfers: cijfersScherm, overzicht: overzichtScherm, werklijst: werklijstScherm, evenementen: evenementenScherm, bouw: bouwScherm, klanten: klantenScherm, planning: planningScherm, markt: marktScherm, resultaten: resultatenScherm, werkwijze: werkwijzeScherm, instellingen: instellingenScherm };
@@ -2437,7 +2505,11 @@ document.addEventListener('click', (e) => {
     else if (act === 'gebeld') { zet(id, x.s, { gebeld: VANDAAG }); toast('Gebeld: genoteerd', true); }
     else if (act === 'terughalen') { zet(id, x.s, { later: null }); toast('Terug in de lijst', true); }
     else if (act === 'bel') toast(x.org.formulier ? `Formulier: ${x.org.formulier}` : 'Geen telefoonnummer gevonden');
-    else if (act === 'herinner') { if (afgemeld(x.org)) { toast('Afgemeld: geen herinnering'); return; } zet(id, 'verstuurd', { herinnerd: VANDAAG }); toast(`Herinnering verstuurd naar ${x.org.email} (demo)`, true); }
+    else if (act === 'herinner') { if (afgemeld(x.org)) { toast('Afgemeld: geen herinnering'); return; } open(`Herinnering aan ${x.org.naam}`, herinneringHtml(x), true); }
+    else if (act === 'herinner-stuur') {
+      const t = $('#hertekst').value.trim(); if (!t) { $('#herfout').textContent = 'De mail is leeg.'; $('#hertekst').focus(); return; }
+      dicht(); zet(id, 'verstuurd', { herinnerd: VANDAAG, herinnerMail: t }); toast(`Herinnering verstuurd naar ${x.org.email} (demo)`, true);
+    }
     else if (act === 'outlook') { if (x.org && x.org.email) open(`Antwoord aan ${x.org.naam}`, antwoordHtml(x), true); else toast('Opent de mail in Outlook (demo)'); }
     else if (act === 'antw-outlook') {
       const t = $('#antwtekst').value, open_ = [...new Set(t.match(/\[[^\]]+\]/g) || [])];

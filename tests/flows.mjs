@@ -62,7 +62,10 @@ for (const [w, h] of [[1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
   await naar(p, 'klanten');
   if (mob) await p.click('[data-ktab="verstuurd"]');
   const her = await p.$('#main [data-a="herinner"]'); t(W + 'herinneringknop', !!her);
-  if (her) { await her.click(); await p.waitForTimeout(40); t(W + 'herinnering toast', (await txt(p, '#ttekst')).includes('Herinnering')); }
+  if (her) { const hid = await her.getAttribute('data-id'); await her.click(); await p.waitForTimeout(40);
+    t(W + 'herinnering: eerst voorbeeldmail', await p.evaluate((i) => document.querySelector('#scherm').classList.contains('open') && /Beste/.test(document.querySelector('#hertekst').value) && !DB.vind(+i).herinnerd, hid));
+    await p.click('#vbody [data-a="herinner-stuur"]'); await p.waitForTimeout(40);
+    t(W + 'herinnering pas na versturen', (await txt(p, '#ttekst')).includes('Herinnering') && await p.evaluate((i) => !!DB.vind(+i).herinnerd, hid)); }
   if (!mob) { await p.click('[data-kw="lijst"]'); await p.click('[data-ktab="geleverd"]'); await p.waitForTimeout(40);
   t(W + 'lijstweergave geleverd', await n(p, '#main .t-kl .r') >= 7); }
   else { await p.click('[data-ktab="geleverd"]'); await p.waitForTimeout(40); t(W + 'mobiel fase geleverd', await n(p, '.kolom.mob-on .deal') >= 7); }
