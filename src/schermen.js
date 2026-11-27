@@ -239,7 +239,7 @@ ${l.length ? l.map(evRij).join('') : leeg('Niets gevonden.', ' Pas de filters of
 // =====================================================================
 const TL_VAN = '2026-01-01', TL_TOT = '2028-12-31';
 const tlPos = (d) => Math.max(0, Math.min(100, (dag(d) - dag(TL_VAN)) / (dag(TL_TOT) - dag(TL_VAN)) * 100));
-const tlAs = (inhoud) => `<div class="tl-as">${['2026', '2027', '2028'].map((j) => `<span class="jr" style="left:${tlPos(j + '-01-01')}%"><span>${j}</span></span>`).join('')}<span class="nu" style="left:${tlPos(VANDAAG)}%" title="Vandaag"></span>${inhoud}</div>`;
+const tlAs = (inhoud) => `<div class="tl-as">${['2026', '2027', '2028'].map((j) => `<span class="jr" style="left:${tlPos(j + '-01-01')}%"><span>${j}</span></span>`).join('')}${inhoud}</div>`;
 function bouwRij(x) {
   HUIDIG.push(x.id);
   const balk = x.datum ? `<span class="tl-balk ${x.bstatus === 'afgelopen' ? 'af' : ''}${x.tot ? '' : ' open'}" style="left:${tlPos(x.datum)}%;width:${Math.max(1.2, tlPos(x.tot || TL_TOT) - tlPos(x.datum))}%" title="${esc(periodeKort(x))}"></span>` : '<span class="tl-onb"><span>periode onbekend · zie publicatie</span></span>';
@@ -254,7 +254,7 @@ function bouwScherm() {
   const kop = `<div class="tr th tl-kop" role="row"><div>Project</div><div class="c-wie">Wie bellen</div><div>Afstand</div><div class="c-tl">${tlAs('')}</div><div class="c-st">Status</div></div>`;
   const groep = (t, u, l) => l.length ? `<div class="groepsrij">${t} <span>${l.length} · ${u}</span></div>${l.map(bouwRij).join('')}` : '';
   return `${paginakop('bouw', { doel: 'Echte projecten uit het Gemeenteblad (12 maanden) met een tijdelijke fietsenstalling. Lange huur; Henk belt, HekRadar mailt hier niet.', extra: `<div class="kern"><div><span>Te bellen</span><b>${V.bouwBellen.length}</b></div><div><span>Met bekende periode</span><b>${metPeriode}</b></div><div><span>Bron</span><b style="font-size:13px;padding-top:4px"><span class="bron echt">echt</span></b></div></div>` })}
-<div class="inhoud"><section class="blok"><div class="werkbalk"><p class="uitleg">Balk = huurperiode volgens de publicatie. Oranje lijn = vandaag.</p><div class="rechts">${afstandFilter()}</div></div>
+<div class="inhoud"><section class="blok"><div class="werkbalk"><p class="uitleg">Balk = huurperiode volgens de publicatie.</p><div class="rechts">${afstandFilter()}</div></div>
 <div class="tl" role="table" aria-label="Bouwprojecten">${kop}
 ${groep('Te bellen', 'nog geen contact', V.bouwBellen)}${groep('Gebeld of later', 'opvolgen', V.bouwGebeld)}${groep('Afgelopen', 'goed om te weten wie dit doet', V.bouwAf)}
 ${!V.bouwBellen.length && !V.bouwGebeld.length && !V.bouwAf.length ? leeg('Geen projecten binnen deze afstand.') : ''}</div></section></div>`;
