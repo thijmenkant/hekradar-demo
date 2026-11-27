@@ -94,15 +94,16 @@ h1, h2, h3 { margin: 0; }
 .radar-stip.s1 { left: 72%; top: 26%; animation-delay: .3s; }
 .radar-stip.s2 { left: 30%; top: 70%; animation-delay: 1.4s; }
 .radar-stip.s3 { left: 22%; top: 34%; animation-delay: 1.95s; }
-.radar.groot { width: 52px; height: 52px; margin: 0; vertical-align: middle; box-shadow: 0 0 0 1.5px var(--g600), 0 0 14px rgba(92,184,95,.35); }
-.radar.groot .radar-stip { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; }
-.scanblok { margin-left: auto; display: flex; align-items: center; gap: 12px; background: var(--g950); color: #fff; border-radius: var(--rad); padding: 10px 16px 10px 10px; }
-.scanblok > div { display: grid; gap: 2px; }
-.scanblok > div > b { font: 600 15px/1.2 var(--merk); }
-.scanblok span { font-size: 13px; color: #b9c9bd; }
-.scanblok span b { color: #fff; font-weight: 600; }
-.scanblok .link { color: var(--g300); font-size: 13px; }
-@media (max-width: 767px) { .scanblok { margin-left: 0; width: 100%; } }
+/* Scan rechtsboven: rustig, open op wit, net als de kerncijfers op andere schermen; alleen de radar is donker */
+.radar.groot { width: 38px; height: 38px; margin: 0; vertical-align: middle; box-shadow: 0 0 0 1px var(--g600); }
+.radar.groot .radar-stip { width: 4px; height: 4px; margin: -2px 0 0 -2px; }
+.scanblok { margin-left: auto; display: flex; align-items: center; gap: 12px; padding-left: 18px; border-left: 1px solid var(--lijn); }
+.scanblok > div { display: grid; gap: 1px; }
+.scanblok > div > b { font-size: 12px; font-weight: 500; color: var(--ink3); }
+.scanblok span { font-size: 13px; color: var(--ink3); }
+.scanblok span b { font: 600 15px/1.3 var(--merk); color: var(--x-titel); margin-right: 2px; }
+.scanblok .link { color: var(--x-acc); font-size: 13px; }
+@media (max-width: 767px) { .scanblok { margin-left: 0; padding-left: 0; border-left: 0; } }
 @keyframes radar-draai { to { transform: rotate(360deg); } }
 @keyframes radar-stip { 0% { opacity: 1; transform: scale(1.4); } 70% { opacity: .15; transform: scale(1); } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .radar-veeg, .radar-stip { animation: none; } .radar-veeg { transform: rotate(40deg); } .radar-stip { opacity: .8; } }
