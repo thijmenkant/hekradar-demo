@@ -1590,7 +1590,7 @@ const PDOK = { suggest: 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/sugge
   foto: 'https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0/Actueel_orthoHR/EPSG:3857/{z}/{x}/{y}.jpeg',
   kaart: 'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png' };
 const GEEN_KAART = 'Tik op de schets waar de vrachtwagen kan stoppen.';
-const DEMO_MELDING = '<b>Alleen in dit Claude-venster:</b> Claude blokkeert kaarten en adres zoeken, daarom zie je een schets. Open <code>demo/index.html</code> op je laptop of straks de website: daar staan hier het adresveld en de luchtfoto.';
+const DEMO_MELDING = '<b>Kaart geblokkeerd in dit venster.</b> Daarom zie je een schets. De versie met adres zoeken en luchtfoto staat op <a href="https://thijmenkant.github.io/hekradar-demo/" target="_blank" rel="noopener">thijmenkant.github.io/hekradar-demo</a>.';
 let losPunt = null, losAdres = '', bouwAdres = '', bouwLijnen = [[]], bouwKlaar = false, bouwSchets = false, leafletBelofte = null, zoekTimer = null, pKaart = null;
 const K = {}; // K.los / K.bouw: { map, lagen, pin, lijnen, losRef }
 function laadLeaflet() {
