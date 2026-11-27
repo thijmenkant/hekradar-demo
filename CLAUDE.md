@@ -1,6 +1,6 @@
 # RekRadar demo – werkafspraken
 
-Demo van RekRadar voor Henk van der Zouwen (Fietsenrekhuren.com, Almkerk). Live via GitHub Pages: https://thijmenkant.github.io/hekradar-demo/
+Demo van RekRadar voor Henk van der Zouwen (Fietsenrekhuren.com, Almkerk). Live via GitHub Pages: https://thijmenkant.github.io/rekradar-demo/
 
 ## Taal en houding
 - Nederlands, informeel en direct. Eerst kritisch (wat klopt niet, wat ontbreekt), dan pas helpen. Geen "goed idee" uit beleefdheid.

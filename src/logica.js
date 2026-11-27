@@ -1,5 +1,10 @@
 const VANDAAG = '2026-11-26';
 const PRIJS_BOK = 300, REKKEN_BOK = 50, BTW = 0.21;
+// Transportkosten per klus: 0 of leeg = zit in de prijs (standaard). Henk kan per evenement een bedrag invullen.
+const transportVan = (x) => Math.max(0, Math.round(Number(x && x.transport) || 0));
+const rekPrijs = (b) => Math.round(b * PRIJS_BOK);
+const prijsVan = (x, b = x.bokken) => rekPrijs(b) + transportVan(x);
+const PRESETS = [0.5, 1, 2, 4];
 // Voorraad: 100 bokken = 5.000 rekken (opgegeven 27 nov 2026). Rekken zijn bezet van de dag vóór tot de dag na het evenement (aanname).
 let VOORRAAD_BOK = 100;
 // Besteltermijn per soort (dagen vooraf): zo vroeg komt een evenement in de werklijst. Aanname, bij te stellen op echte boekingen.
@@ -203,7 +208,7 @@ const teLaat = (z) => z.filter((x) => actief(x) && ['klaar', 'zoekt'].includes(x
 // Voorraad: rekken van geboekte klussen zijn bezet van de dag vóór tot de dag na het evenement.
 const bezetOp = (d, zonder) => E.filter((y) => y.id !== zonder && ['geboekt', 'geleverd'].includes(y.s) && y.datum && Math.abs(dagenTot(y.datum) - dagenTot(d)) <= 2).reduce((s, y) => s + y.bokken, 0);
 const vrijOp = (d, zonder) => Math.max(0, VOORRAAD_BOK - bezetOp(d, zonder));
-const inRegio = (x) => (!PROV || x.prov === PROV) && (!GEM || x.gem === GEM);
+const inRegio = (x) => (!PROV.length || PROV.includes(x.prov)) && (!GEM || x.gem === GEM);
 const actief = (x) => !x.later || x.later <= VANDAAG;
 const binnenAfstand = (x) => !AFST || (x.km || 0) <= AFST;
 const dv = (x, y) => (x.datum || '9999').localeCompare(y.datum || '9999');
