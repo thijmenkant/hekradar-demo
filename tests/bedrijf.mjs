@@ -111,6 +111,21 @@ await p.click('#main .scanblok [data-gev="vandaag"]'); await p.waitForTimeout(80
 t('scan rechtsboven: link naar nieuw vandaag', await p.evaluate(() => GEVONDEN === 'vandaag'));
 await p.close();
 
+// Antwoord op een klant: de logica herkent de vraag en stelt een mail voor; Henk vult [stukken] in en verstuurt zelf
+p = await nieuw();
+t('antwoord: vragen herkend', await p.evaluate(() => [vraagSoort('Wat kost het als jullie ook opbouwen?')[0], vraagSoort('Kunnen we dit volgende week even bellen?')[0], vraagSoort('Klinkt goed, kunnen het er ook meer zijn?')[0], vraagSoort('Kan het wat goedkoper?')[0], vraagSoort('Hoi!')[0]].join()) === 'opbouw,bellen,meer,prijs,anders');
+t('antwoord: opbouwen geeft twee versies', await p.evaluate(() => antwoordVoorstellen({ org: { naam: 'X' }, bokken: 1, antwoord: 'Wat kost het als jullie ook opbouwen?' }).map((v) => v.label).join()) === 'Opbouwen kost extra,Opbouwen zit erbij');
+const ant = await p.evaluate(() => { const x = E.find((y) => y.s === 'antwoord' && /opbouw/i.test(y.antwoord)); return x.id; });
+await open(p, ant); await p.click('#paneel [data-a="outlook"]'); await p.waitForTimeout(80);
+t('antwoord: venster met herkende vraag', (await txt(p, '#vbody')).includes('Herkend: vraag over opbouwen'));
+await p.click('[data-a="antw-outlook"]'); await p.waitForTimeout(40);
+t('antwoord: blokkeert zolang er [ ] open staat', (await txt(p, '#antwfout')).includes('[bedrag]') && await p.evaluate((i) => DB.vind(i).s, ant) === 'antwoord');
+await p.click('[data-antw="1"]'); await p.waitForTimeout(40);
+t('antwoord: andere versie gekozen', (await p.inputValue('#antwtekst')).includes('zit bij de prijs inbegrepen'));
+await p.click('[data-a="antw-outlook"]'); await p.waitForTimeout(80);
+t('antwoord: klant wacht niet meer op Henk', await p.evaluate((i) => DB.vind(i).s === 'verstuurd' && !voorraad().antwoord.some((x) => x.id === i), ant));
+await p.close();
+
 if (fouten.length) { fout += fouten.length; console.log('JS-fouten:', fouten); }
 console.log(`bedrijfsregels: ${ok} geslaagd, ${fout} mislukt`);
 await b.close(); process.exit(fout ? 1 : 0);

@@ -102,6 +102,15 @@ h1, h2, h3 { margin: 0; }
 .scanblok > div > b { font-size: 12px; font-weight: 500; color: var(--ink3); }
 .scanblok span { font-size: 13px; color: var(--ink3); }
 .scanblok span b { font: 600 15px/1.3 var(--merk); color: var(--x-titel); margin-right: 2px; }
+.antw { display: grid; gap: 14px; padding: 18px 20px 20px; }
+.antw-vraag { display: grid; gap: 4px; padding: 10px 12px; background: var(--let-bg); border-left: 3px solid var(--let); border-radius: var(--rad); font-size: 14px; }
+.antw-vraag .mu { font-size: 12px; }
+.antw-herkend { font-size: 12px; font-weight: 600; color: var(--let-tekst); }
+.antw .seg.antw-keus { display: flex; flex-wrap: wrap; grid-template-columns: none; }
+.antw-keus button { flex: 1 1 0; padding: 10px 12px; }
+.antw .mail .mb { padding: 0; }
+.antw textarea { width: 100%; border: 0; border-radius: 0; padding: 12px; font: 14px/1.55 var(--tekst); resize: vertical; min-height: 280px; }
+.antw-voet { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .scanblok .link { color: var(--x-acc); font-size: 13px; }
 @media (max-width: 767px) { .scanblok { margin-left: 0; padding-left: 0; border-left: 0; } }
 @keyframes radar-draai { to { transform: rotate(360deg); } }
@@ -1822,6 +1831,51 @@ function mailHtml(x) {
 <p>Liever eerst even bellen? 0183 851 700.</p><p style="margin:0">Groet,<br>Henk van der Zouwen<br>Fietsenrekhuren.com, Almkerk</p>
 <small>Je krijgt deze mail omdat dit adres openbaar staat${o.bron ? ' op ' + esc(o.bron.split('/')[0]) : ''}. Geen mail meer van ons? <button class="link" data-a="afmeld" data-id="${x.id}" title="Demo: zo werkt de afmeldlink voor de klant">Afmelden</button>.</small></div></div>`;
 }
+// =====================================================================
+// ANTWOORD OP EEN KLANT: logica herkent de vraag en stelt een mail voor.
+// Regels in volgorde: de eerste die past wint. Henk ziet welke regel herkend is,
+// kiest waar nodig tussen twee versies en vult [stukken tussen haken] zelf in.
+// Er wordt niets verstuurd: Henk opent het concept in Outlook en verstuurt zelf.
+// =====================================================================
+const VRAAGSOORTEN = [
+  ['opbouw', 'vraag over opbouwen', /opbouw|opzetten|neerzetten|plaatsen van de rekken/i],
+  ['bellen', 'wil even bellen', /\bbel(len)?\b|telefo|afspraak/i],
+  ['meer', 'wil meer rekken', /\bmeer\b|extra rekken|groter|ander aantal/i],
+  ['prijs', 'vraag over de prijs', /prijs|kost|korting|goedkoper|\bduur\b/i],
+  ['datum', 'andere datum', /datum|dag eerder|dag later|verzet|verplaats/i],
+];
+const vraagSoort = (t) => VRAAGSOORTEN.find(([, , re]) => re.test(t || '')) || ['anders', 'andere vraag'];
+const LADDER = [0.5, 1, 2, 4, 6];
+function antwoordVoorstellen(x) {
+  const o = x.org || {}, rekken = x.bokken * REKKEN_BOK, prijs = euro(x.bokken * PRIJS_BOK);
+  const aan = `Beste ${o.naam || ''},\n\nBedankt voor je reactie.`, boek = 'Boeken kan direct via de link in mijn vorige mail.';
+  const slot = '\n\nMet vriendelijke groet,\nHenk van der Zouwen\nFietsenrekhuren.com\n0183 851 700';
+  const m = (label, kern) => ({ label, tekst: `${aan} ${kern}${slot}` });
+  const [soort] = vraagSoort(x.antwoord);
+  if (soort === 'opbouw') return [
+    m('Opbouwen kost extra', `Opbouwen kan zeker: dan zetten wij de ${rekken} fietsenrekken op de plek die jullie willen. Dat kost €[bedrag] extra, bovenop de ${prijs} (excl. btw) voor de rekken. Transport, leveren en ophalen blijven inbegrepen.\n\nZal ik het zo voor jullie vastleggen? Dan hoor ik het graag. ${boek}`),
+    m('Opbouwen zit erbij', `Goed nieuws: het opbouwen zit bij de prijs inbegrepen. Voor ${prijs} (excl. btw) leveren we ${rekken} fietsenrekken, zetten we ze op en halen we ze na afloop weer op.\n\n${boek} Laat gerust weten als je nog vragen hebt.`)];
+  if (soort === 'bellen') return [
+    m('Momenten voorstellen', `Bellen is prima. Ik kan volgende week op [dag] of [dag], tussen [tijd] en [tijd]. Welk moment past jullie het best?\n\nJe mag mij ook altijd zelf bellen op 0183 851 700.`),
+    m('Henk belt zelf', `Bellen is prima. Ik bel je volgende week op [dag] rond [tijd]. Op welk nummer kan ik je het best bereiken?`)];
+  if (soort === 'meer') { const vrij = x.datum ? vrijOp(x.datum, x.id) : VOORRAAD_BOK, n = LADDER.find((b) => b > x.bokken && b <= vrij) || x.bokken;
+    return [m('Meer kan', `Meer rekken kan zeker. Per ${REKKEN_BOK} fietsenrekken is de prijs ${euro(PRIJS_BOK)} (excl. btw), inclusief transport, leveren en ophalen. Voor ${n * REKKEN_BOK} rekken is dat bijvoorbeeld ${euro(n * PRIJS_BOK)}.\n\nHoeveel fietsenrekken hebben jullie nodig? Dan pas ik het aan. ${boek}`)]; }
+  if (soort === 'prijs') return [
+    m('Prijs uitleggen', `De prijs is ${prijs} (excl. btw) voor ${rekken} fietsenrekken. Daar zit alles in: transport, leveren en na afloop weer ophalen, zonder bijkomende kosten.\n\n${boek}`),
+    m('Korting voorstellen', `De gewone prijs is ${prijs} (excl. btw) voor ${rekken} fietsenrekken. Omdat [reden], kan ik het voor jullie doen voor €[bedrag] (excl. btw), inclusief transport, leveren en ophalen.\n\nZal ik het zo vastleggen?`)];
+  if (soort === 'datum') return [m('Andere datum', `Een andere datum is geen probleem. Op welke dag hebben jullie de rekken nodig? Dan kijk ik of er genoeg vrij zijn en pas ik het aan.`)];
+  return [m('Antwoord', `[antwoord op de vraag]\n\n${boek}`)];
+}
+function antwoordHtml(x, keus = 0) {
+  const v = antwoordVoorstellen(x), [, herkend] = vraagSoort(x.antwoord), k = Math.min(keus, v.length - 1);
+  return `<div class="antw" data-id="${x.id}">
+<div class="antw-vraag"><span class="mu">Klant vroeg</span><q>${esc(x.antwoord || 'Antwoord staat in je Outlook')}</q><span class="antw-herkend">Herkend: ${herkend}</span></div>
+${v.length > 1 ? `<div class="seg antw-keus" role="group" aria-label="Kies een antwoord">${v.map((a, i) => `<button type="button" data-antw="${i}" aria-pressed="${i === k}"><b>${esc(a.label)}</b></button>`).join('')}</div>` : ''}
+<div class="mail"><div class="mk"><div class="mk-label">${ICON.mail}E-mail · concept</div><span>Aan</span><b style="font-weight:500">${esc(x.org.email)}</b><span>Onderwerp</span><b style="font-weight:500">Re: Fietsenrekken voor ${esc(x.naam)}</b></div>
+<div class="mb"><textarea id="antwtekst" class="in" rows="14" aria-label="Tekst van het antwoord">${esc(v[k].tekst)}</textarea></div></div>
+<p class="kort">Vul de stukken tussen [ ] in en pas aan wat je wilt. HekRadar verstuurt niets: je verstuurt zelf vanuit Outlook.</p>
+<div class="antw-voet"><button class="btn p" data-a="antw-outlook" data-id="${x.id}">${ICON.mail} Openen in Outlook</button><span class="ffout" id="antwfout" role="alert"></span></div></div>`;
+}
 const kansSectie = (x) => { if (KLANT.includes(x.s)) return ''; const k = kans(x);
   return `<section class="sectie"><h2>Waarom deze kans<span class="rechts">${k.score} van 100</span></h2><ul class="redenen"><li class="basis"><span class="w">40</span><span>startwaarde</span></li>${k.redenen.map(([n, t]) => `<li class="${n > 0 ? 'plus' : 'min'}"><span class="w">${n > 0 ? '+' : '−'}${Math.abs(n)}</span><span>${esc(t)}</span></li>`).join('')}</ul></section>`; };
 const pubLink = (x, t) => x.pub ? `<a href="https://zoek.officielebekendmakingen.nl/${esc(x.pub)}.html" target="_blank" rel="noopener">${t} ↗</a>` : '';
@@ -2197,6 +2251,7 @@ document.addEventListener('click', (e) => {
   const kaartje = e.target.closest('#kaartje');
   if (kaartje) { const r = kaartje.getBoundingClientRect(); if (!pin || !kaartje.contains(pin)) { pin = document.createElement('div'); pin.className = 'pin'; kaartje.appendChild(pin); } pin.style.left = (e.clientX - r.left) + 'px'; pin.style.top = (e.clientY - r.top) + 'px'; losPunt = { schets: true, x: +((e.clientX - r.left) / r.width * 100).toFixed(1), y: +((e.clientY - r.top) / r.height * 100).toFixed(1) }; $('#loscoord').textContent = 'Losplek gekozen op de schets.'; $('#ffout').textContent = ''; return; }
   const bs = e.target.closest('#bschets'); if (bs) { if (!bouwKlaar) { const r = bs.getBoundingClientRect(); voegPunt([+((e.clientX - r.left) / r.width * 100).toFixed(1), +((e.clientY - r.top) / r.height * 100).toFixed(1)]); } return; }
+  const ak = e.target.closest('[data-antw]'); if (ak) { const box = ak.closest('.antw'), x = DB.vind(Number(box.dataset.id)), v = antwoordVoorstellen(x)[Number(ak.dataset.antw)]; $('#antwtekst').value = v.tekst; $('#antwfout').textContent = ''; box.querySelectorAll('[data-antw]').forEach((b) => b.setAttribute('aria-pressed', b === ak)); return; }
   const tk = e.target.closest('[data-teken]'); if (tk) { tekenActie(tk.dataset.teken); return; }
   const pd = e.target.closest('[data-pdok]'); if (pd) { const d = pd.dataset.doel; $(d === 'bouw' ? '#badreslijst' : '#adreslijst').innerHTML = ''; kiesAdres(pd.dataset.pdok, pd.textContent, d); return; }
   const co = e.target.closest('[data-coord]'); if (co) { const [la, ln] = co.dataset.coord.split(',').map(Number); kiesPlek(co.dataset.doel, la, ln, 'Plek uit Google Maps-link'); return; }
@@ -2234,7 +2289,12 @@ document.addEventListener('click', (e) => {
     else if (act === 'terughalen') { zet(id, x.s, { later: null }); toast('Terug in de lijst', true); }
     else if (act === 'bel') toast(x.org.formulier ? `Formulier: ${x.org.formulier}` : 'Geen telefoonnummer gevonden');
     else if (act === 'herinner') { if (afgemeld(x.org)) { toast('Afgemeld: geen herinnering'); return; } zet(id, 'verstuurd', { herinnerd: VANDAAG }); toast(`Herinnering verstuurd naar ${x.org.email} (demo)`, true); }
-    else if (act === 'outlook') toast('Opent de mail in Outlook (demo)');
+    else if (act === 'outlook') { if (x.org && x.org.email) open(`Antwoord aan ${x.org.naam}`, antwoordHtml(x), true); else toast('Opent de mail in Outlook (demo)'); }
+    else if (act === 'antw-outlook') {
+      const t = $('#antwtekst').value, open_ = [...new Set(t.match(/\[[^\]]+\]/g) || [])];
+      if (open_.length) { $('#antwfout').textContent = `Vul nog in: ${open_.join(', ')}`; $('#antwtekst').focus(); return; }
+      dicht(); zet(id, 'verstuurd', { verstuurd: VANDAAG, beantwoord: VANDAAG, antwoordMail: t }); toast(`Antwoord aan ${x.org.naam} staat klaar in Outlook. Jij verstuurt het.`, true);
+    }
     else if (act === 'probeer') { losPunt = null; losAdres = ''; bouwAdres = ''; bouwLijnen = [[]]; bouwKlaar = false; bouwSchets = false; pin = null; open('Voorbeeld · wat de klant ziet na “Bekijk en boek”', formInteractief(x), true); startKaarten(x); }
     else if (act === 'opslaan') { toast('Opgeslagen (demo)'); $('#opknop').disabled = true; $('#opstatus').textContent = 'Opgeslagen'; }
     else if (act === 'betaal') {

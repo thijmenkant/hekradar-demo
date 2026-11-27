@@ -102,6 +102,15 @@ h1, h2, h3 { margin: 0; }
 .scanblok > div > b { font-size: 12px; font-weight: 500; color: var(--ink3); }
 .scanblok span { font-size: 13px; color: var(--ink3); }
 .scanblok span b { font: 600 15px/1.3 var(--merk); color: var(--x-titel); margin-right: 2px; }
+.antw { display: grid; gap: 14px; padding: 18px 20px 20px; }
+.antw-vraag { display: grid; gap: 4px; padding: 10px 12px; background: var(--let-bg); border-left: 3px solid var(--let); border-radius: var(--rad); font-size: 14px; }
+.antw-vraag .mu { font-size: 12px; }
+.antw-herkend { font-size: 12px; font-weight: 600; color: var(--let-tekst); }
+.antw .seg.antw-keus { display: flex; flex-wrap: wrap; grid-template-columns: none; }
+.antw-keus button { flex: 1 1 0; padding: 10px 12px; }
+.antw .mail .mb { padding: 0; }
+.antw textarea { width: 100%; border: 0; border-radius: 0; padding: 12px; font: 14px/1.55 var(--tekst); resize: vertical; min-height: 280px; }
+.antw-voet { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .scanblok .link { color: var(--x-acc); font-size: 13px; }
 @media (max-width: 767px) { .scanblok { margin-left: 0; padding-left: 0; border-left: 0; } }
 @keyframes radar-draai { to { transform: rotate(360deg); } }
