@@ -9,7 +9,7 @@ const naar = async (p, v) => { await p.goto(url + '#' + v); await p.reload(); aw
 const esc = async (p) => { if (await n(p, '#paneel')) { await p.keyboard.press('Escape'); await p.waitForTimeout(40); } };
 
 for (const [w, h] of [[1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
-  const p = await b.newPage({ viewport: { width: w, height: h } }); p.on('pageerror', (e) => fouten.push(w + ' ' + e.message));
+  const p = await b.newPage({ viewport: { width: w, height: h } }); await p.route(/unpkg\.com|pdok\.nl/, (r) => r.abort()); p.on('pageerror', (e) => fouten.push(w + ' ' + e.message));
   const W = `[${w}] `, mob = w < 768;
   await naar(p, 'overzicht');
   // Overzicht: signalen en taken
