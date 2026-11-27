@@ -330,7 +330,7 @@ function staafGrafiek(data, { max, stap, fmt, label, nu = -1, id = 'g' }) {
   const piek = Math.max(...data.map(([, n]) => n));
   const grid = Array.from({ length: Math.floor(max / stap) + 1 }, (_, i) => i * stap).map((n) => `<line x1="${L}" x2="${W}" y1="${y(n)}" y2="${y(n)}" stroke="${n ? '#e6eae3' : '#c2c9bf'}"/><text x="${L - 6}" y="${y(n) + 4}" text-anchor="end" font-size="11" fill="#5f6b63">${fmt(n)}</text>`).join('');
   const bars = data.map(([m, n], i) => { const x = L + i * bw + bw * .18, w = bw * .64, toon = n === piek || i === nu;
-    return `<path d="${pad(x, y(n), w, H - B - y(n))}" fill="${i === nu ? '#0f2716' : '#2b6a33'}"/>${toon && n ? `<text x="${x + w / 2}" y="${y(n) - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="#142019">${label(n)}${i === nu ? ' · nu' : ''}</text>` : ''}<text x="${x + w / 2}" y="${H - 7}" text-anchor="middle" font-size="11" fill="#5f6b63">${m}</text><rect x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent" data-tip="${esc(m)}: ${esc(label(n))}"/>`; }).join('');
+    return `<path d="${pad(x, y(n), w, H - B - y(n))}" fill="${i === nu ? '#0f2716' : '#2b6a33'}"/>${toon && n ? `<text x="${x + w / 2}" y="${Math.min(...[i - 1, i, i + 1].filter((j) => data[j]).map((j) => y(data[j][1]))) - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="#142019">${label(n)}${i === nu ? ' · nu' : ''}</text>` : ''}<text x="${x + w / 2}" y="${H - 7}" text-anchor="middle" font-size="11" fill="#5f6b63">${m}</text><rect x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent" data-tip="${esc(m)}: ${esc(label(n))}"/>`; }).join('');
   return `<div class="grafiek"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(data.map(([m, n]) => m + ' ' + label(n)).join(', '))}">${grid}${bars}</svg><div class="tip"></div></div>`;
 }
 function marktScherm() {
@@ -761,8 +761,12 @@ function teken() {
   const nb = $('#paneel .p-body'); if (nb) { nb.dataset.id = DETAIL; nb.scrollTop = pScroll; }
   document.querySelectorAll('.tabs').forEach((bar) => { const on = bar.querySelector('.on'); if (on && (on.offsetLeft < bar.scrollLeft || on.offsetLeft + on.offsetWidth > bar.scrollLeft + bar.clientWidth)) bar.scrollLeft = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; });
   const sel = $('#main .r.sel'); if (sel) sel.scrollIntoView({ block: 'nearest' });
-  naPaneel();
+  naPaneel(); markeerScroll();
 }
+// Balken die horizontaal scrollen krijgen rechts een vervaging, zolang er nog iets achter de rand zit.
+function markeerScroll() { document.querySelectorAll('.tabs, .inst-nav, .statusset, .scrollx, .bord').forEach((e) => e.classList.toggle('loopt', e.scrollWidth - e.scrollLeft - e.clientWidth > 2)); }
+addEventListener('resize', markeerScroll);
+document.addEventListener('scroll', (e) => { if (e.target.classList && e.target.matches('.tabs, .inst-nav, .statusset, .scrollx, .bord')) markeerScroll(); }, true);
 function ga(v, id, behoud) {
   if (v === 'detail') DETAIL = id;
   else { if (!behoud) { STATUS = 'alle'; SOORT = ''; ZOEK = ''; } VIEW = v; DETAIL = null; }
