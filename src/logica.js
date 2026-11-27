@@ -1,7 +1,7 @@
 const VANDAAG = '2026-11-26';
 const PRIJS_BOK = 300, REKKEN_BOK = 50, BTW = 0.21;
-// Aanname, met Henk vaststellen: hoeveel bokken er zijn. Rekken zijn bezet van de dag vóór tot de dag na het evenement.
-let VOORRAAD_BOK = 10;
+// Voorraad: 100 bokken = 5.000 rekken (opgegeven 27 nov 2026). Rekken zijn bezet van de dag vóór tot de dag na het evenement (aanname).
+let VOORRAAD_BOK = 100;
 // Besteltermijn per soort (dagen vooraf): zo vroeg komt een evenement in de werklijst. Aanname, bij te stellen op echte boekingen.
 const BESTEL = { intocht: 56, kerstmarkt: 70, loop: 120, markt: 120, dorpsfeest: 120, carnaval: 120, overig: 120, kermis: 150, sport: 150, festival: 180 };
 const bestelDagen = (x) => Math.max(BESTEL[x.soort] || 120, x.vast ? 130 : 0);
@@ -26,7 +26,9 @@ const dag = (d) => new Date(d + 'T12:00:00');
 const datumKort = (d) => d ? dag(d).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) : 'datum onbekend';
 const datumLang = (d) => d ? dag(d).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
 const metJaar = (d) => dag(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
-const dagenTot = (d) => Math.round((dag(d) - dag(VANDAAG)) / 864e5);
+// Onthouden per datum: hangt alleen af van de datumtekst, en de voorraadcontrole vraagt hem honderden keren per scherm.
+const DT = new Map();
+const dagenTot = (d) => { let n = DT.get(d); if (n === undefined) { n = Math.round((dag(d) - dag(VANDAAG)) / 864e5); DT.set(d, n); } return n; };
 const addDag = (d, n) => { const t = dag(d); t.setDate(t.getDate() + n); return t.toISOString().slice(0, 10); };
 const overDagen = (d) => { if (!d) return ''; const n = dagenTot(d); return n < 0 ? `${-n} dagen geleden` : n === 0 ? 'vandaag' : n === 1 ? 'morgen' : `over ${n} dagen`; };
 const bokTekst = (b) => b == 0.5 ? 'halve bok' : b == 1 ? '1 bok' : `${String(b).replace('.', ',')} bokken`;

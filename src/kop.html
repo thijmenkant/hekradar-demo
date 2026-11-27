@@ -472,6 +472,19 @@ details.meer-inst[open] > summary::before { content: '▾ '; }
 .p-voet .meer { margin-left: auto; display: flex; gap: 4px; }
 .p-voet .meer .btn { padding: 0 9px; }
 .p-voet { flex-wrap: wrap; }
+/* Werkbon: één blad voor wie levert; bij printen alleen dit blad */
+.werkbon .wb-kop { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--lijn); margin-bottom: 12px; }
+.werkbon .wb-kop b { display: block; font: 600 18px/1.25 var(--merk); }
+.werkbon .wb-kop span { color: var(--ink2); font-size: 13px; }
+.werkbon .wb-n { white-space: nowrap; }
+.henk-vandaag { display: grid; gap: 12px; align-content: start; }
+.henk-vandaag .cc-label { margin: 6px 0 -4px; }
+.werkbon .bouwkaart { height: 170px; }
+.werkbon .wb-voet { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+details.nog > summary { list-style: none; cursor: pointer; display: block; }
+details.nog > summary::-webkit-details-marker { display: none; }
+details.nog[open] > summary { display: none; }
+@media print { body * { visibility: hidden !important; } #vbody, #vbody * { visibility: visible !important; } #vbody { position: absolute; inset: 0 auto auto 0; width: 100%; } .noprint { display: none !important; } }
 .p-voet .meer .sel { width: auto; min-width: 0; }
 .sectie { padding-top: 0; margin-top: 16px; }
 .sectie > h2 { font: 600 11px/1 var(--merk); color: #fff; letter-spacing: .08em; text-transform: uppercase; margin: 0 -20px 12px; padding: 9px 20px; display: flex; align-items: center; gap: 8px; background: var(--x-donker); border-top: 1px solid var(--x-donker-rand); border-bottom: 1px solid var(--x-donker-rand); border-left: 3px solid var(--g500); }

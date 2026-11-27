@@ -80,6 +80,18 @@ const pt = await txt(p, '#paneel');
 t('Henk ziet losplek van vorig jaar en bel-verzoek', pt.includes('zoals vorig jaar') && pt.includes('Klant wil even bellen'));
 await p.close();
 
+// Indeling voor Henk (?henk): drie schermen, werkbon, oude namen verwijzen door
+p = await b.newPage({ viewport: { width: 1440, height: 900 } }); await p.route(/unpkg\.com|pdok\.nl/, (r) => r.abort()); p.on('pageerror', (e) => fouten.push(e.message));
+await p.goto(url.replace(/index\.html.*/, 'index.html?henk') + '#vandaag'); await p.waitForTimeout(100);
+t('henk: drie schermen in het menu', (await p.$$eval('#nav .groep .ni', (l) => l.map((e) => e.dataset.v))).join() === 'vandaag,agenda,cijfers');
+t('henk: eerst en als je tijd hebt', (await txt(p, '#main')).includes('Eerst doen') && (await txt(p, '#main')).includes('Als je tijd hebt'));
+await p.evaluate(() => ga('planning')); await p.waitForTimeout(60);
+t('henk: planning verwijst naar agenda', await p.evaluate(() => VIEW) === 'agenda');
+await p.click('#main [data-a="werkbon"]'); await p.waitForTimeout(60);
+t('henk: werkbon opent', (await txt(p, '#vbody')).includes('Contact op de dag'));
+t('voorraad is 100 bokken', await p.evaluate(() => VOORRAAD_BOK) === 100);
+await p.close();
+
 if (fouten.length) { fout += fouten.length; console.log('JS-fouten:', fouten); }
 console.log(`bedrijfsregels: ${ok} geslaagd, ${fout} mislukt`);
 await b.close(); process.exit(fout ? 1 : 0);
