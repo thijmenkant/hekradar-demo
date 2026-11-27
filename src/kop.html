@@ -132,6 +132,18 @@ h1, h2, h3 { margin: 0; }
 .werk { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
 .werk.naast { grid-template-columns: minmax(0, 1fr) var(--paneel); }
 #pslot { display: contents; }
+.werk { position: relative; }
+.p-terug { margin-right: 6px; font-weight: 600; }
+.p-terug svg { width: 16px; height: 16px; }
+/* Evenement open: groot over het werkvlak, de lijst blijft eronder staan voor de terugweg */
+@media (min-width: 768px) {
+  .werk.groot { grid-template-columns: minmax(0, 1fr); }
+  .werk.groot .scrim { display: none; }
+  .werk.groot .paneel { position: absolute; inset: 0; width: auto; height: auto; z-index: 50; border-left: 0; box-shadow: none; animation: in 140ms ease-out; }
+  .werk.groot .paneel > * { padding-left: max(20px, calc((100% - 880px) / 2)); padding-right: max(20px, calc((100% - 880px) / 2)); }
+  .werk.groot .p-titelvlak { padding-top: 22px; padding-bottom: 18px; }
+  .werk.groot .p-titel { font-size: 24px; }
+}
 main { min-width: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .inhoud { padding: 20px 24px 40px; flex: 1; }
 

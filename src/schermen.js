@@ -525,7 +525,8 @@ const kansSectie = (x) => { if (KLANT.includes(x.s)) return ''; const k = kans(x
 const pubLink = (x, t) => x.pub ? `<a href="https://zoek.officielebekendmakingen.nl/${esc(x.pub)}.html" target="_blank" rel="noopener">${t} ↗</a>` : '';
 function paneelKop(x) {
   const pos = STAPEL.indexOf(x.id), vorig = pos > 0 ? STAPEL[pos - 1] : null, volg = pos >= 0 && pos < STAPEL.length - 1 ? STAPEL[pos + 1] : null;
-  return `<div class="p-kop">${pos >= 0 && STAPEL.length > 1 ? `<button class="btn sm ic gh" ${vorig ? `data-open="${vorig}"` : 'disabled'} aria-label="Vorige (k)" title="Vorige (k)">${ICON.op}</button><button class="btn sm ic gh" ${volg ? `data-open="${volg}"` : 'disabled'} aria-label="Volgende (j)" title="Volgende (j)">${ICON.neer}</button><span class="pos">${pos + 1} van ${STAPEL.length}</span>` : '<span class="pos"></span>'}<button class="btn sm gh" data-sluit aria-label="Sluiten (Esc)">${ICON.x} Sluiten</button></div>`;
+  const terug = (MODULES[VIEW] && MODULES[VIEW].naam) || 'lijst';
+  return `<div class="p-kop"><button class="btn sm gh p-terug" data-sluit aria-label="Terug naar ${esc(terug)} (Esc)" title="Terug (Esc)">${I('<path d="M19 12H5M12 19l-7-7 7-7"/>')} Terug naar ${esc(terug)}</button>${pos >= 0 && STAPEL.length > 1 ? `<button class="btn sm ic gh" ${vorig ? `data-open="${vorig}"` : 'disabled'} aria-label="Vorige (k)" title="Vorige (k)">${ICON.op}</button><button class="btn sm ic gh" ${volg ? `data-open="${volg}"` : 'disabled'} aria-label="Volgende (j)" title="Volgende (j)">${ICON.neer}</button><span class="pos">${pos + 1} van ${STAPEL.length}</span>` : '<span class="pos"></span>'}</div>`;
 }
 const waarom = (x) => { if (KLANT.includes(x.s)) return ''; const r = kans(x).redenen.slice().sort((a, b) => Math.abs(b[0]) - Math.abs(a[0])).slice(0, 2); return `<div class="p-waarom"><span class="mu">Kans</span>${kansCel(x)}<span>${r.length ? r.map(([n, t]) => `<b>${n > 0 ? '+' : '−'}${Math.abs(n)}</b> ${esc(t)}`).join(' · ') : 'geen bijzonderheden'}</span></div>`; };
 const titelVlak = (soort, x, sub, staat) => `<div class="p-titelvlak"><div class="p-soort">${soort}</div><div class="p-titel" id="ptitel">${esc(x.naam)}</div><div class="p-sub">${sub}</div><div class="p-staat">${staat}</div>${waarom(x)}</div>`;
@@ -790,7 +791,8 @@ function frameTekenen() {
   const ond = HENK ? [['vandaag', 'Vandaag'], ['evenementen', 'Evenementen'], ['agenda', 'Agenda'], ['cijfers', 'Cijfers']] : [['overzicht', 'Overzicht'], ['werklijst', 'Werklijst'], ['klanten', 'Klanten'], ['planning', 'Planning']];
   $('#onder').innerHTML = ond.map(([k, n]) => `<button class="${VIEW === k || (HENK && k === 'evenementen' && VIEW === 'bouw') ? 'on' : ''}" data-v="${k}" ${VIEW === k ? 'aria-current="page"' : ''}>${ICON[k]}${n}${(k === 'klanten' || k === 'vandaag') && tel[k][0] ? `<em>${tel[k][0]}</em>` : ''}</button>`).join('') + `<button class="${ond.some(([k]) => k === VIEW) || (HENK && VIEW === 'bouw') ? '' : 'on'}" data-meer>${ICON.meer}Meer</button>`;
 }
-function hashZetten() { try { history.replaceState(null, '', '#' + (DETAIL != null ? 'evenement-' + DETAIL : VIEW)); } catch (e) {} }
+let NEGEER_HASH = false;
+function hashZetten(nieuw) { try { const h = '#' + (DETAIL != null ? 'evenement-' + DETAIL : VIEW); if (nieuw) history.pushState({ detail: 1 }, '', h); else history.replaceState(DETAIL != null ? history.state : null, '', h); } catch (e) {} }
 // ---------- VANDAAG (Henk): alles wat vandaag van Henk nodig is, belangrijkste eerst ----------
 function vandaagScherm() {
   const V = voorraad(), vast = V.klaar.filter((x) => x.vast), mails = V.klaar.filter((x) => !x.vast);
@@ -840,7 +842,7 @@ function teken() {
   $('#main').innerHTML = (SCHERMEN[VIEW] || overzichtScherm)();
   $('#pslot').innerHTML = paneelHtml();
   const heeft = !!$('#paneel'), naast = heeft && NAAST.includes(VIEW);
-  $('#werk').classList.toggle('naast', naast); $('#werk').classList.toggle('drawer', heeft && !naast);
+  $('#werk').classList.toggle('naast', naast); $('#werk').classList.toggle('drawer', heeft && !naast); $('#werk').classList.toggle('groot', heeft);
   const nb = $('#paneel .p-body'); if (nb) { nb.dataset.id = DETAIL; nb.scrollTop = pScroll; }
   document.querySelectorAll('.tabs').forEach((bar) => { const on = bar.querySelector('.on'); if (on && (on.offsetLeft < bar.scrollLeft || on.offsetLeft + on.offsetWidth > bar.scrollLeft + bar.clientWidth)) bar.scrollLeft = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; });
   const sel = $('#main .r.sel'); if (sel) sel.scrollIntoView({ block: 'nearest' });
@@ -852,12 +854,13 @@ addEventListener('resize', markeerScroll);
 document.addEventListener('scroll', (e) => { if (e.target.classList && e.target.matches('.tabs, .inst-nav, .statusset, .scrollx, .bord')) markeerScroll(); }, true);
 function ga(v, id, behoud) {
   if (HENKNAAR[v]) v = HENKNAAR[v];
+  const nieuw = v === 'detail' && DETAIL == null;
   if (v === 'detail') DETAIL = id;
   else { if (!behoud) { STATUS = 'alle'; SOORT = ''; ZOEK = ''; GEVONDEN = ''; } VIEW = v; DETAIL = null; }
-  hashZetten(); teken();
+  hashZetten(nieuw); teken();
   if (v === 'detail') { const p = $('#paneel'); if (p) p.focus({ preventScroll: true }); } else { $('#main').scrollTop = 0; window.scrollTo(0, 0); }
 }
-function sluit() { const id = DETAIL; DETAIL = null; hashZetten(); teken(); const r = id != null && $(`#main .r[data-open="${id}"]`); if (r) r.focus({ preventScroll: true }); }
+function sluit() { const id = DETAIL, terugStap = !!(history.state && history.state.detail); DETAIL = null; if (terugStap) { NEGEER_HASH = true; history.back(); } else hashZetten(); teken(); const r = id != null && $(`#main .r[data-open="${id}"]`); if (r) r.focus({ preventScroll: true }); }
 
 // ---------- globaal zoeken ----------
 let zoekSel = -1;
@@ -1007,7 +1010,12 @@ $('#scherm').addEventListener('click', (e) => { if (e.target.id === 'scherm') di
 $('#tundo').onclick = () => { const v = DB.herstel(); if (!v) return; $('#toast').classList.remove('on'); VIEW = v.view; DETAIL = v.detail; hashZetten(); teken(); };
 const ALIAS = HENK ? HENKNAAR : { vandaag: 'overzicht', cijfers: 'markt' };
 function vanHash() { let h = (location.hash || '').slice(1); h = ALIAS[h] || h; const m = h.match(/^evenement-(\d+)$/); if (m && DB.vind(Number(m[1]))) DETAIL = Number(m[1]); else if (SCHERMEN[h]) { VIEW = h; DETAIL = null; } }
-addEventListener('hashchange', () => { STATUS = 'alle'; ZOEK = ''; vanHash(); teken(); });
+addEventListener('hashchange', () => {
+  if (NEGEER_HASH) { NEGEER_HASH = false; return; }
+  // Browser-terug vanuit een geopend evenement: terug naar dezelfde lijst, filters en zoekterm blijven staan.
+  const h = (location.hash || '').slice(1);
+  if (DETAIL != null && (ALIAS[h] || h) === VIEW) { const id = DETAIL; DETAIL = null; teken(); const r = $(`#main .r[data-open="${id}"]`); if (r) r.focus({ preventScroll: true }); return; }
+  STATUS = 'alle'; ZOEK = ''; vanHash(); teken(); });
 vanHash(); teken();
 </script>
 </body>
