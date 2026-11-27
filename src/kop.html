@@ -478,6 +478,12 @@ details.meer-inst[open] > summary::before { content: '▾ '; }
 .werkbon .wb-kop span { color: var(--ink2); font-size: 13px; }
 .werkbon .wb-n { white-space: nowrap; }
 .henk-vandaag { display: grid; gap: 12px; align-content: start; }
+.scanbalk { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--vlak); border: 1px solid var(--lijn); border-radius: var(--rad); padding: 10px 14px; font-size: 14px; }
+.scanbalk .btn { margin-left: auto; }
+.scanbalk .live { width: 8px; height: 8px; border-radius: 50%; background: var(--g400); flex: none; }
+.cel.h b .chip-nieuw, .chip-nieuw { display: inline-block; width: auto; margin-right: 4px; font: 600 10.5px/1 var(--merk); letter-spacing: .04em; text-transform: uppercase; color: var(--g700); background: var(--sel); border: 1px solid var(--g300); border-radius: 3px; padding: 2px 5px; vertical-align: 2px; }
+.gevdag { display: grid; gap: 4px; font-size: 12.5px; color: var(--ink3); margin-top: 8px; }
+.gevdag .in { height: 34px; }
 .henk-vandaag .cc-label { margin: 6px 0 -4px; }
 .werkbon .bouwkaart { height: 170px; }
 .werkbon .wb-voet { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
@@ -884,6 +890,13 @@ details.nog[open] > summary { display: none; }
   .statusset .fopt i { display: none; }
   .statusset .fopt.on { background: var(--x-inkt); color: #fff; border-color: var(--x-inkt); }
   .statusset .fopt.on span { color: rgba(255,255,255,.75); }
+  .facet fieldset.gevset { display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; align-items: center; }
+  .facet fieldset.gevset legend { display: none; }
+  .gevset .fopt { flex: none; width: auto; margin: 0; border: 1px solid var(--lijn2); padding: 6px 10px; }
+  .gevset .fopt i { display: none; }
+  .gevset .fopt.on { background: var(--x-inkt); color: #fff; border-color: var(--x-inkt); }
+  .gevset .fopt.on span { color: rgba(255,255,255,.75); }
+  .gevdag { flex: none; margin-top: 0; display: flex; align-items: center; gap: 6px; }
   .bord { display: block; }
   .kolom { display: none; margin-bottom: 0; }
   .kolom.mob-on { display: block; }

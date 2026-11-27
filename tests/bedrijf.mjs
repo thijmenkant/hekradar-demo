@@ -95,6 +95,17 @@ t('henk: planning verwijst naar agenda', await p.evaluate(() => VIEW) === 'agend
 await p.click('#main [data-a="werkbon"]'); await p.waitForTimeout(60);
 t('henk: werkbon opent', (await txt(p, '#vbody')).includes('Contact op de dag'));
 t('voorraad is 100 bokken', await p.evaluate(() => VOORRAAD_BOK) === 100);
+await p.keyboard.press('Escape');
+// Nieuw vandaag: vanaf Vandaag naar de vergunningen van vannacht, een dag kiezen, en alles zien
+await p.evaluate(() => ga('vandaag')); await p.waitForTimeout(60);
+await p.click('#main .scanbalk [data-gev="vandaag"]'); await p.waitForTimeout(80);
+const nieuwVandaag = await p.evaluate(() => HUIDIG.map((i) => DB.vind(i).gevonden));
+t('nieuw vandaag: alleen vannacht gevonden', nieuwVandaag.length > 0 && nieuwVandaag.every((d) => d === '2026-11-26'));
+t('nieuw vandaag: label in de lijst', (await p.$$('#main .chip-nieuw')).length === nieuwVandaag.length);
+await p.fill('#gevdat', '2026-11-20'); await p.dispatchEvent('#gevdat', 'change'); await p.waitForTimeout(80);
+t('dag kiezen: alleen die dag', await p.evaluate(() => GEVONDEN === '2026-11-20' && HUIDIG.length > 0 && HUIDIG.every((i) => DB.vind(i).gevonden === '2026-11-20')));
+await p.click('#main .resultaat-kop [data-gev=""]'); await p.waitForTimeout(80);
+t('alle evenementen: ook wie al klant is', await p.evaluate(() => GEVONDEN === '' && HUIDIG.some((i) => KLANT.includes(DB.vind(i).s))));
 await p.close();
 
 if (fouten.length) { fout += fouten.length; console.log('JS-fouten:', fouten); }

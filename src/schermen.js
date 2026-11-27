@@ -12,7 +12,7 @@ const DB = {
 };
 
 // ---------- staat ----------
-let AFST = 0, SORT = 'kans', STAPEL = [], HUIDIG = [], KTAB = 'antwoord', HTAB = 'klaar', VIEW = 'overzicht', DETAIL = null, STATUS = 'alle', SOORT = '', ZOEK = '', PROV = '', GEM = '', KWEERGAVE = 'bord';
+let GEVONDEN = '', AFST = 0, SORT = 'kans', STAPEL = [], HUIDIG = [], KTAB = 'antwoord', HTAB = 'klaar', VIEW = 'overzicht', DETAIL = null, STATUS = 'alle', SOORT = '', ZOEK = '', PROV = '', GEM = '', KWEERGAVE = 'bord';
 Object.assign(ICON, {
   overzicht: I('<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>'),
   werklijst: I('<path d="M9 6h12M9 12h12M9 18h12"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/>'),
@@ -108,7 +108,7 @@ const sortKop = (k, n) => `<button data-sort="${k}" ${SORT === k ? `aria-sort="$
 function evRij(x) {
   HUIDIG.push(x.id);
   return `<div ${rijAttr(x)}><div class="cel c-kans" role="cell">${kansCel(x)}</div>
-<div class="cel h c-naam" role="cell"><b>${esc(x.naam)}</b><span>${esc(x.s === 'bouw' ? (x.aanvrager || 'aanvrager onbekend') : x.org ? x.org.naam : 'organisator nog onbekend')}${x.fase === 'A' && x.s !== 'bouw' ? ' · vergunning in aanvraag' : ''}</span></div>
+<div class="cel h c-naam" role="cell"><b>${x.gevonden === VANDAAG ? '<span class="chip-nieuw">nieuw</span> ' : ''}${esc(x.naam)}</b><span>${esc(x.s === 'bouw' ? (x.aanvrager || 'aanvrager onbekend') : x.org ? x.org.naam : 'organisator nog onbekend')}${x.fase === 'A' && x.s !== 'bouw' ? ' · vergunning in aanvraag' : ''}</span></div>
 <div class="cel t c-dat" role="cell">${datumCel(x)}</div>
 <div class="cel c-soort" role="cell">${esc(x.s === 'bouw' ? 'bouw: ' + SOORTBOUW[x.soortBouw] : x.soort)}</div>
 <div class="cel h c-reg" role="cell"><b style="font-weight:500">${esc(x.plaats)}</b><span>${esc(x.prov)}</span></div>
@@ -223,14 +223,19 @@ ${t[0] === 'klaar' && V.laat.length ? `<div class="blok-voet">${V.laat.length} o
 // =====================================================================
 // EVENEMENTEN: zoeken en selecteren met filters links.
 // =====================================================================
-const STATUSF = [['alle', 'Alle'], ['klaar', 'Mailadres bekend'], ['aanvraag', 'Vergunning in aanvraag'], ['verwacht', 'Jaarlijks'], ['zonder', 'Geen mailadres'], ['zoekt', 'Contact gezocht'], ['bouw', 'Bouw en verbouw'], ['later', 'Weggezet (later)']];
+const STATUSF = [['alle', 'Alle'], ['klant', 'Al aanbod of geboekt'], ['klaar', 'Mailadres bekend'], ['aanvraag', 'Vergunning in aanvraag'], ['verwacht', 'Jaarlijks'], ['zonder', 'Geen mailadres'], ['zoekt', 'Contact gezocht'], ['bouw', 'Bouw en verbouw'], ['later', 'Weggezet (later)']];
 // Indeling voor Henk: Evenementen en Bouw en verbouw als twee tabbladen van Alle evenementen.
-const evTabs = () => HENK ? [tab('data-v', 'evenementen', VIEW === 'evenementen', 'Evenementen', DB.alle().filter((x) => !KLANT.includes(x.s) && !['weg', 'gepland', 'bouw', 'verloren'].includes(x.s) && x.datum && dagenTot(x.datum) >= 0 && actief(x)).length), tab('data-v', 'bouw', VIEW === 'bouw', 'Bouw en verbouw', voorraad().bouwBellen.length)].join('') : '';
+const evTabs = () => HENK ? [tab('data-v', 'evenementen', VIEW === 'evenementen', 'Evenementen', zichtbaar().filter((x) => !['weg', 'gepland', 'bouw', 'verloren'].includes(x.s) && x.datum && dagenTot(x.datum) >= 0 && actief(x) && binnenAfstand(x)).length), tab('data-v', 'bouw', VIEW === 'bouw', 'Bouw en verbouw', voorraad().bouwBellen.length)].join('') : '';
+// Gevonden door de scan: vandaag, gisteren, deze week of een gekozen dag.
+const GEVF = [['', 'Altijd'], ['vandaag', 'Nieuw vandaag'], ['gisteren', 'Gisteren'], ['week', 'Afgelopen 7 dagen']];
+const gevondenOp = (x, g) => !g || (!!x.gevonden && (g === 'vandaag' ? x.gevonden === VANDAAG : g === 'gisteren' ? x.gevonden === addDag(VANDAAG, -1) : g === 'week' ? dagenTot(x.gevonden) >= -6 : x.gevonden === g));
+const gevTekst = (g) => g === 'vandaag' ? 'nieuw vandaag' : g === 'gisteren' ? 'gevonden gisteren' : g === 'week' ? 'gevonden in de afgelopen 7 dagen' : g ? 'gevonden op ' + datumLang(g) : '';
 function evenementenScherm() {
-  const basis = zichtbaar().filter((x) => !KLANT.includes(x.s) && !['weg', 'gepland', 'verloren'].includes(x.s) && !(HENK && x.s === 'bouw') && (x.s === 'bouw' ? x.bstatus !== 'afgelopen' : dagenTot(x.datum) >= 0) && binnenAfstand(x) && zoekt(x.naam + x.plaats + x.gem + (x.org ? x.org.naam : '') + (x.aanvrager || '')));
+  const alleBasis = zichtbaar().filter((x) => !['weg', 'gepland', 'verloren'].includes(x.s) && !(HENK && x.s === 'bouw') && (x.s === 'bouw' ? x.bstatus !== 'afgelopen' : dagenTot(x.datum) >= 0) && binnenAfstand(x) && zoekt(x.naam + x.plaats + x.gem + (x.org ? x.org.naam : '') + (x.aanvrager || '')));
+  const basis = alleBasis.filter((x) => gevondenOp(x, GEVONDEN));
   const weg = basis.filter((x) => !actief(x)), act = basis.filter(actief);
   if (STATUS === 'later' && !weg.length) STATUS = 'alle';
-  const filt = (k) => k === 'later' ? weg : k === 'alle' ? act : k === 'aanvraag' ? act.filter((x) => x.fase === 'A') : act.filter((x) => x.s === k);
+  const filt = (k) => k === 'later' ? weg : k === 'alle' ? act : k === 'klant' ? act.filter((x) => KLANT.includes(x.s)) : k === 'aanvraag' ? act.filter((x) => x.fase === 'A' && !KLANT.includes(x.s)) : act.filter((x) => x.s === k);
   const metStatus = filt(STATUS);
   const soorten = [...new Set(metStatus.map((x) => x.s === 'bouw' ? 'bouw' : x.soort))].sort();
   if (SOORT && !soorten.includes(SOORT)) SOORT = '';
@@ -239,12 +244,13 @@ function evenementenScherm() {
   return `${paginakop('evenementen', { doel: `Alle evenementen uit de vergunningen in ${esc(regioTekst())}. Filter links, open rechts.`, tabs: evTabs() })}
 <div class="inhoud"><div class="zoekscherm">
 <aside class="facet" aria-label="Filters">
+<fieldset class="gevset"><legend>Gevonden door de scan</legend>${GEVF.map(([k, n]) => opt('data-gev', k, GEVONDEN === k, n, alleBasis.filter((x) => gevondenOp(x, k)).length)).join('')}<label class="gevdag">Of kies een dag<input type="date" class="in" id="gevdat" max="${VANDAAG}" value="${/^\d{4}-/.test(GEVONDEN) ? GEVONDEN : ''}"></label></fieldset>
 <fieldset class="statusset"><legend>Status</legend>${STATUSF.filter(([k]) => (k !== 'later' || weg.length) && !(HENK && k === 'bouw')).map(([k, n]) => opt('data-st', k, STATUS === k, n, filt(k).length)).join('')}</fieldset>
 <fieldset class="niet-m"><legend>Soort</legend>${opt('data-soort', '', !SOORT, 'Alle soorten', metStatus.length)}${soorten.map((s) => opt('data-soort', s, SOORT === s, hoofdletter(s), metStatus.filter((x) => (x.s === 'bouw' ? 'bouw' : x.soort) === s).length)).join('')}</fieldset>
 <fieldset class="niet-m"><legend>Waar</legend>${regioFilter()}${afstandFilter()}</fieldset>
 <fieldset class="alleen-m mfilters"><select class="sel" id="soortsel" aria-label="Soort"><option value="">Alle soorten</option>${soorten.map((s) => `<option value="${esc(s)}" ${SOORT === s ? 'selected' : ''}>${hoofdletter(s)}</option>`).join('')}</select>${afstandFilter()}${regioFilter()}</fieldset>
 </aside>
-<section class="blok"><div class="resultaat-kop"><b class="num">${l.length} resultaten</b>${zoekVeld('Zoek op naam, plaats of organisatie')}${sorteerFilter('alleen-m')}</div>
+<section class="blok"><div class="resultaat-kop"><b class="num">${l.length} resultaten${GEVONDEN ? ` · ${gevTekst(GEVONDEN)} <button class="link klein" data-gev="">wis</button>` : ''}</b>${zoekVeld('Zoek op naam, plaats of organisatie')}${sorteerFilter('alleen-m')}</div>
 <div class="t-ev" role="table" aria-label="Evenementen"><div class="tr th" role="row"><div>${sortKop('kans', 'Kans')}</div><div>Evenement</div><div>${sortKop('datum', 'Datum')}</div><div class="c-soort">Soort</div><div class="c-reg">Plaats</div><div class="c-km">${sortKop('afstand', 'Afstand')}</div><div>Status</div></div>
 ${l.length ? l.map(evRij).join('') : leeg('Niets gevonden.', ' Pas de filters of de zoekterm aan.')}</div>
 <div class="blok-voet">Demo met ${E.length} verzonnen evenementen. De echte scan vond sinds 12 november ${SCAN.publicaties.toLocaleString('nl-NL')} publicaties uit ${SCAN.gemeenten} gemeenten.</div></section>
@@ -544,6 +550,7 @@ function eventPaneel(x) {
 ${x.km != null ? `<dt>Afstand</dt><dd>${kmTekst(x)} vanaf Almkerk <span class="mu">· schatting</span></dd>` : ''}
 <dt>Soort</dt><dd>${esc(x.soort)}</dd>
 ${x.fase === 'A' ? '<dt>Vergunning</dt><dd>aangevraagd, gemeente beslist nog</dd>' : ''}
+${x.gevonden ? `<dt>Gevonden</dt><dd>${x.gevonden === VANDAAG ? 'vannacht, door de scan' : datumLang(x.gevonden)}</dd>` : ''}
 ${x.vorig ? `<dt>Eerdere edities</dt><dd>${esc(x.vorig.replace(' eerdere edities gevonden', ''))} gevonden</dd>` : ''}
 ${x.pub ? `<dt>Bron</dt><dd>${pubLink(x, 'vergunning bekijken')}</dd>` : ''}</dl></section>`;
   const org = `<section class="sectie"><h2>Organisator</h2>${!x.org ? '<p class="mu" style="margin:0;font-size:13px">Nog niet gevonden. De contactzoeker kijkt in lokaal nieuws, kalenders, sportbonden en vorige jaren.</p>'
@@ -795,6 +802,7 @@ function vandaagScherm() {
   const kop = (t, u) => `<div class="cc-label"><b>${t}</b> ${u}</div>`;
   return `${paginakop('vandaag', { doel: `Goedemorgen Henk. ${hoofdletter(datumLang(VANDAAG))}: dit is wat er vandaag van jou nodig is, belangrijkste eerst.`, extra: kern })}
 <div class="inhoud henk-vandaag">
+${(() => { const n = DB.alle().filter((x) => x.gevonden === VANDAAG && x.s !== 'weg').length; return n ? `<div class="scanbalk"><span class="live"></span><span><b>${n} nieuwe vergunningen</b> gevonden in de scan van vannacht</span><button class="btn sm" data-v="evenementen" data-gev="vandaag">Bekijk de nieuwe</button></div>` : ''; })()}
 ${eerst ? kop('Eerst', 'klanten en klussen die op jou wachten') : ''}
 ${groep('urg', 'Klanten wachten op je antwoord', 'reactie staat in je Outlook', V.antwoord, (x) => rij(x, x.antwoord ? `<q>${esc(x.antwoord)}</q>` : '', btn('outlook', x, `${ICON.antwoord} Antwoorden`, 'p')), 5)}
 ${groep('', 'Leveringen deze week', 'werkbon voor wie rijdt', lev7, (x) => rij(x, `${x.bokken * REKKEN_BOK} rekken`, btn('werkbon', x, 'Werkbon')), 5)}
@@ -844,7 +852,7 @@ document.addEventListener('scroll', (e) => { if (e.target.classList && e.target.
 function ga(v, id, behoud) {
   if (HENKNAAR[v]) v = HENKNAAR[v];
   if (v === 'detail') DETAIL = id;
-  else { if (!behoud) { STATUS = 'alle'; SOORT = ''; ZOEK = ''; } VIEW = v; DETAIL = null; }
+  else { if (!behoud) { STATUS = 'alle'; SOORT = ''; ZOEK = ''; GEVONDEN = ''; } VIEW = v; DETAIL = null; }
   hashZetten(); teken();
   if (v === 'detail') { const p = $('#paneel'); if (p) p.focus({ preventScroll: true }); } else { $('#main').scrollTop = 0; window.scrollTo(0, 0); }
 }
@@ -939,7 +947,9 @@ document.addEventListener('click', (e) => {
     return;
   }
   const op = e.target.closest('[data-open]'); if (op) { const id = Number(op.dataset.open); if (op.hasAttribute('data-gz')) { $('#zoekres').classList.remove('on'); $('#globaal').classList.remove('mopen'); $('#gzoek').value = ''; $('#gzoek').blur(); } const groep = op.closest('.sub-lijst, .agenda, .kolom-lijst'); if (groep) STAPEL = [...groep.querySelectorAll('.r[data-open]')].map((r) => Number(r.dataset.open)); else if (HUIDIG.includes(id)) STAPEL = HUIDIG.slice(); dicht(); meerDicht(); ga('detail', id); return; }
-  const v = e.target.closest('[data-v]'); if (v) { e.preventDefault(); dicht(); meerDicht(); if (v.dataset.kt) { KTAB = v.dataset.kt; if (v.dataset.v === 'klanten' && innerWidth >= 768 && KWEERGAVE === 'bord' && v.dataset.kt === 'verstuurd') KWEERGAVE = 'lijst'; } if (v.dataset.ht) HTAB = v.dataset.ht; ga(v.dataset.v); return; }
+  const gv = e.target.closest('[data-gev]'); if (gv && !gv.dataset.v) { GEVONDEN = gv.dataset.gev; teken(); return; }
+  const v = e.target.closest('[data-v]'); if (v && v.dataset.gev) { dicht(); meerDicht(); STATUS = 'alle'; SOORT = ''; ZOEK = ''; GEVONDEN = v.dataset.gev; ga(v.dataset.v, null, true); return; }
+  if (v) { e.preventDefault(); dicht(); meerDicht(); if (v.dataset.kt) { KTAB = v.dataset.kt; if (v.dataset.v === 'klanten' && innerWidth >= 768 && KWEERGAVE === 'bord' && v.dataset.kt === 'verstuurd') KWEERGAVE = 'lijst'; } if (v.dataset.ht) HTAB = v.dataset.ht; ga(v.dataset.v); return; }
   const st = e.target.closest('[data-st]'); if (st) { STATUS = st.dataset.st; SOORT = ''; DETAIL = null; ga('evenementen', null, true); return; }
 });
 document.addEventListener('change', (e) => {
@@ -952,6 +962,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'afst') { AFST = Number(e.target.value); teken(); }
   if (e.target.id === 'sort') { SORT = e.target.value; teken(); }
   if (e.target.id === 'soortsel') { SOORT = e.target.value; teken(); }
+  if (e.target.id === 'gevdat') { GEVONDEN = e.target.value || ''; teken(); }
   if (e.target.closest && e.target.closest('.inst')) wijzigingInst();
 });
 function wijzigingInst() { const k = $('#opknop'); if (k) { k.disabled = false; $('#opstatus').textContent = 'Niet opgeslagen wijzigingen'; } }

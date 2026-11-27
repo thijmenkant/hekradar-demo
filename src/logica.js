@@ -164,6 +164,9 @@ const BOUW = [
 const kmLL = (lat, lng) => { const a = LOC.Almkerk, r = Math.PI / 180, dLa = (lat - a[0]) * r, dLo = (lng - a[1]) * r; const h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(lat * r) * Math.sin(dLo / 2) ** 2; return Math.max(5, Math.round(6371 * 2 * Math.asin(Math.sqrt(h)) * 1.3 / 5) * 5); };
 const bstatus = (van, tot) => tot && tot < VANDAAG ? 'afgelopen' : van ? 'loopt' : 'onbekend';
 let E = bouw();
+// Gevonden: de dag dat de nachtelijke scan de vergunning vond. Demo: verzonnen, over de afgelopen twee weken;
+// 'nieuw' = vannacht gevonden. In de echte tool komt dit uit de scan.
+E.forEach((x) => { x.gevonden = x.verstuurd ? addDag(x.verstuurd, -1 - (x.id % 5)) : x.nieuw && !x.vast ? VANDAAG : addDag(VANDAAG, -1 - ((x.id * 7) % 13)); });
 BOUW.forEach(([pub, naam, plaats, gem, prov, lat, lng, soortBouw, van, tot, aanvrager, pubs, noot], i) => E.push({
   id: 900 + i, pub, naam, plaats, gem, prov, km: kmLL(lat, lng), datum: van || null, tot, soortBouw, aanvrager, pubs, noot,
   s: 'bouw', bstatus: bstatus(van, tot), fase: 'V', soort: 'bouw', bokken: 0, org: null, nieuw: false, echt: true }));
