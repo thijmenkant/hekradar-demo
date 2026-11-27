@@ -127,6 +127,21 @@ await p.click('[data-a="antw-outlook"]'); await p.waitForTimeout(80);
 t('antwoord: klant wacht niet meer op Henk', await p.evaluate((i) => DB.vind(i).s === 'verstuurd' && !voorraad().antwoord.some((x) => x.id === i), ant));
 await p.close();
 
+// Datum: filteren per maand, in de kolomkop en links; meerdere maanden tegelijk
+p = await nieuw();
+await p.goto(url.replace(/index\.html.*/, 'index.html') + '#evenementen'); await p.reload(); await p.waitForTimeout(80);
+const mnd = await p.evaluate(() => [...document.querySelectorAll('.t-ev .th [data-kf="datum"] .kolpop [data-maand]')].map((b) => b.dataset.maand).filter(Boolean));
+t('datum: kolomkop heeft maanden', mnd.length >= 2 && mnd.every((m) => /^\d{4}-\d{2}$|^onbekend$/.test(m)));
+await p.click('.t-ev .th [data-kf="datum"] > summary'); await p.click(`.t-ev .th [data-kf="datum"] .kolpop [data-maand="${mnd[0]}"]`); await p.waitForTimeout(40);
+t('datum: filter op één maand', await p.evaluate((m) => DMAAND.join() === m && HUIDIG.length > 0 && HUIDIG.every((i) => (DB.vind(i).datum || '').startsWith(m)), mnd[0]) && !!(await p.$('.t-ev .th [data-kf="datum"].kolfilter.aan')));
+t('datum: lijstje blijft open', await p.evaluate(() => document.querySelector('.t-ev .th [data-kf="datum"]').open));
+await p.click(`.t-ev .th [data-kf="datum"] .kolpop [data-maand="${mnd[1]}"]`); await p.waitForTimeout(40);
+t('datum: twee maanden tegelijk', await p.evaluate((ms) => DMAAND.length === 2 && ms.every((m) => HUIDIG.some((i) => (DB.vind(i).datum || '').startsWith(m))), mnd.slice(0, 2)));
+t('datum: aantal klopt met de lijst', await p.evaluate(() => [...document.querySelectorAll('.t-ev .th [data-kf="datum"] .kolpop [data-maand].on span')].reduce((s, e) => s + Number(e.textContent), 0) === HUIDIG.length));
+await p.click('.facet [data-maand=""]'); await p.waitForTimeout(40);
+t('datum: links "Alle datums" wist de keuze', await p.evaluate(() => DMAAND.length === 0));
+await p.close();
+
 // Kolomkoppen: sorteren op elke kolom (nog eens klikken = omgekeerd) en filteren via de trechter
 p = await nieuw();
 await p.goto(url.replace(/index\.html.*/, 'index.html') + '#evenementen'); await p.reload(); await p.waitForTimeout(80);

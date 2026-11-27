@@ -12,7 +12,7 @@ const DB = {
 };
 
 // ---------- staat ----------
-let SORTOM = false, GEVONDEN = '', AFST = 0, SORT = 'kans', STAPEL = [], HUIDIG = [], KTAB = 'antwoord', HTAB = 'klaar', VIEW = 'overzicht', DETAIL = null, STATUS = [], SOORT = [], ZOEK = '', PROV = [], GEM = '', KWEERGAVE = 'bord';
+let SORTOM = false, GEVONDEN = '', AFST = 0, SORT = 'kans', STAPEL = [], HUIDIG = [], KTAB = 'antwoord', HTAB = 'klaar', VIEW = 'overzicht', DETAIL = null, STATUS = [], SOORT = [], ZOEK = '', PROV = [], DMAAND = [], GEM = '', KWEERGAVE = 'bord';
 Object.assign(ICON, {
   overzicht: I('<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>'),
   werklijst: I('<path d="M9 6h12M9 12h12M9 18h12"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/>'),
@@ -249,8 +249,11 @@ function evenementenScherm() {
   const inStatus = (x) => STATUS.length ? STATUS.some((k) => inK(x, k)) : actief(x);
   const soortVan = (x) => x.s === 'bouw' ? 'bouw' : x.soort;
   const inSoort = (x) => !SOORT.length || SOORT.includes(soortVan(x));
+  // Datum: filteren per maand ('2026-12'); zonder datum = 'onbekend'.
+  const maandVan = (x) => x.datum ? x.datum.slice(0, 7) : 'onbekend';
+  const inMaand = (x) => !DMAAND.length || DMAAND.includes(maandVan(x));
   // Tellingen per provincie: alle andere filters wel, de provincie zelf niet.
-  const provBron = DB.alle().filter((x) => bf(x) && gevondenOp(x, GEVONDEN) && inStatus(x) && inSoort(x));
+  const provBron = DB.alle().filter((x) => bf(x) && gevondenOp(x, GEVONDEN) && inStatus(x) && inSoort(x) && inMaand(x));
   const provs = [...new Set(provBron.map((x) => x.prov).concat(PROV))].sort();
   const basis = alleBasis.filter((x) => gevondenOp(x, GEVONDEN));
   const weg = basis.filter((x) => !actief(x));
@@ -259,9 +262,14 @@ function evenementenScherm() {
   const metStatus = basis.filter(inStatus);
   const soorten = [...new Set(metStatus.map(soortVan))].sort();
   SOORT = SOORT.filter((s) => soorten.includes(s));
-  const l = sorteer(metStatus.filter(inSoort));
+  const metSoort = metStatus.filter(inSoort), metMaand = metStatus.filter(inMaand);
+  const maanden = [...new Set(metSoort.map(maandVan))].sort();
+  DMAAND = DMAAND.filter((m) => maanden.includes(m));
+  const l = sorteer(metSoort.filter(inMaand));
   const statusOpties = STATUSF.filter(([k]) => (k !== 'later' || weg.length) && !(HENK && k === 'bouw')).map(([k, n]) => ['data-st', k, n, filt(k).length, k === 'alle' ? !STATUS.length : STATUS.includes(k)]);
-  const soortOpties = [['data-soort', '', 'Alle soorten', metStatus.length, !SOORT.length], ...soorten.map((s) => ['data-soort', s, hoofdletter(s), metStatus.filter((x) => soortVan(x) === s).length, SOORT.includes(s)])];
+  const soortOpties = [['data-soort', '', 'Alle soorten', metMaand.length, !SOORT.length], ...soorten.map((s) => ['data-soort', s, hoofdletter(s), metMaand.filter((x) => soortVan(x) === s).length, SOORT.includes(s)])];
+  const maandNaam = (m) => m === 'onbekend' ? 'Datum onbekend' : hoofdletter(dag(m + '-01').toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' }));
+  const maandOpties = [['data-maand', '', 'Alle datums', metSoort.length, !DMAAND.length], ...maanden.map((m) => ['data-maand', m, maandNaam(m), metSoort.filter((x) => maandVan(x) === m).length, DMAAND.includes(m)])];
   const provOpties = [['data-provk', '', 'Alle provincies', provBron.length, !PROV.length], ...provs.map((pv) => ['data-provk', pv, pv, provBron.filter((x) => x.prov === pv).length, PROV.includes(pv)])];
   const namen = (o) => o.filter((x) => x[4] && x[1]).map((x) => x[2]).join(', ');
   const opt = (attr, k, aan, n, c, vink) => `<button class="fopt ${vink ? 'vink' : ''} ${aan ? 'on' : ''}" ${attr}="${esc(k)}" aria-pressed="${aan}"><i></i>${esc(n)}<span>${c}</span></button>`;
@@ -272,15 +280,16 @@ function evenementenScherm() {
 <fieldset class="gevset"><legend>Gevonden door de scan</legend>${GEVF.map(([k, n]) => opt('data-gev', k, GEVONDEN === k, n, alleBasis.filter((x) => gevondenOp(x, k)).length)).join('')}<label class="gevdag">Of kies een dag<input type="date" class="in" id="gevdat" max="${VANDAAG}" value="${/^\d{4}-/.test(GEVONDEN) ? GEVONDEN : ''}"></label></fieldset>
 <fieldset class="statusset"><legend>Status</legend>${lijst(statusOpties)}</fieldset>
 <fieldset class="niet-m"><legend>Soort</legend>${lijst(soortOpties)}</fieldset>
+<fieldset class="niet-m"><legend>Maand</legend>${lijst(maandOpties)}</fieldset>
 <fieldset class="niet-m"><legend>Provincie</legend>${lijst(provOpties)}</fieldset>
 <fieldset class="niet-m"><legend>Waar</legend>${regioFilter(true)}${afstandFilter()}</fieldset>
 <fieldset class="alleen-m mfilters"><select class="sel" id="soortsel" aria-label="Soort"><option value="">Alle soorten</option>${SOORT.length > 1 ? `<option value="${esc(SOORT.join('|'))}" selected>${SOORT.length} soorten</option>` : ''}${soorten.map((s) => `<option value="${esc(s)}" ${SOORT.length === 1 && SOORT[0] === s ? 'selected' : ''}>${hoofdletter(s)}</option>`).join('')}</select>${afstandFilter()}${regioFilter()}</fieldset>
 </aside>
 <section class="blok"><div class="resultaat-kop"><b class="num">${l.length} resultaten${GEVONDEN ? ` · ${gevTekst(GEVONDEN)} <button class="link klein" data-gev="">wis</button>` : ''}</b>${zoekVeld('Zoek op naam, plaats of organisatie')}${sorteerFilter('alleen-m')}</div>
-<div class="t-ev" role="table" aria-label="Evenementen"><div class="tr th" role="row"><div>${sortKop('kans', 'Kans')}</div><div>${sortKop('naam', 'Evenement')}</div><div>${sortKop('datum', 'Datum')}</div>
+<div class="t-ev" role="table" aria-label="Evenementen"><div class="tr th" role="row"><div>${sortKop('kans', 'Kans')}</div><div>${sortKop('naam', 'Evenement')}</div><div>${sortKop('datum', 'Datum')}${kolFilter('datum', namen(maandOpties), maandOpties)}</div>
 <div class="c-soort">${sortKop('soort', 'Soort')}${kolFilter('soort', namen(soortOpties), soortOpties)}</div>
 <div class="c-reg">${sortKop('plaats', 'Plaats')}${kolFilter('provincie', namen(provOpties), provOpties)}</div>
-<div class="c-km">${sortKop('afstand', 'Afstand')}${(() => { const bron = DB.alle().filter((x) => { const a = AFST; AFST = 0; const ok = bf(x); AFST = a; return ok && inRegio(x) && gevondenOp(x, GEVONDEN) && inStatus(x) && inSoort(x); }); return kolFilter('afstand', AFST ? `tot ${AFST} km` : '', [[0, 'Elke afstand'], [50, 'Tot 50 km'], [100, 'Tot 100 km'], [150, 'Tot 150 km']].map(([v, n]) => ['data-afstk', v, n, bron.filter((x) => !v || (x.km || 0) <= v).length, AFST === v]), false, true); })()}</div>
+<div class="c-km">${sortKop('afstand', 'Afstand')}${(() => { const bron = DB.alle().filter((x) => { const a = AFST; AFST = 0; const ok = bf(x); AFST = a; return ok && inRegio(x) && gevondenOp(x, GEVONDEN) && inStatus(x) && inSoort(x) && inMaand(x); }); return kolFilter('afstand', AFST ? `tot ${AFST} km` : '', [[0, 'Elke afstand'], [50, 'Tot 50 km'], [100, 'Tot 100 km'], [150, 'Tot 150 km']].map(([v, n]) => ['data-afstk', v, n, bron.filter((x) => !v || (x.km || 0) <= v).length, AFST === v]), false, true); })()}</div>
 <div>${sortKop('status', 'Status')}${kolFilter('status', namen(statusOpties.filter((o) => o[1] !== 'alle')), statusOpties, true)}</div></div>
 ${l.length ? l.map(evRij).join('') : leeg('Niets gevonden.', ' Pas de filters of de zoekterm aan.')}</div>
 <div class="blok-voet">Demo met ${E.length} verzonnen evenementen. De echte scan vond sinds 12 november ${SCAN.publicaties.toLocaleString('nl-NL')} publicaties uit ${SCAN.gemeenten} gemeenten.</div></section>
@@ -1018,7 +1027,7 @@ function ga(v, id, behoud) {
   if (HENKNAAR[v]) v = HENKNAAR[v];
   const nieuw = v === 'detail' && DETAIL == null;
   if (v === 'detail') DETAIL = id;
-  else { if (!behoud) { STATUS = []; SOORT = []; ZOEK = ''; GEVONDEN = ''; } VIEW = v; DETAIL = null; }
+  else { if (!behoud) { STATUS = []; SOORT = []; DMAAND = []; ZOEK = ''; GEVONDEN = ''; } VIEW = v; DETAIL = null; }
   hashZetten(nieuw); teken();
   if (v === 'detail') { const p = $('#paneel'); if (p) p.focus({ preventScroll: true }); } else { $('#main').scrollTop = 0; window.scrollTo(0, 0); }
 }
@@ -1074,6 +1083,7 @@ document.addEventListener('click', (e) => {
   const ak_ = e.target.closest('[data-afstk]'); if (ak_) { AFST = Number(ak_.dataset.afstk); tekenOpen(ak_); return; }
   const pk_ = e.target.closest('[data-provk]'); if (pk_) { PROV = wissel(PROV, pk_.dataset.provk); GEM = ''; tekenOpen(pk_); return; }
   const sr = e.target.closest('[data-soort]'); if (sr) { SOORT = wissel(SOORT, sr.dataset.soort); tekenOpen(sr); return; }
+  const mk = e.target.closest('[data-maand]'); if (mk) { DMAAND = wissel(DMAAND, mk.dataset.maand); tekenOpen(mk); return; }
   const kt = e.target.closest('[data-ktab]'); if (kt) { KTAB = kt.dataset.ktab; teken(); return; }
   const ht = e.target.closest('[data-htab]'); if (ht) { HTAB = ht.dataset.htab; teken(); return; }
   const pk = e.target.closest('[data-pak]'); if (pk) { DB.vind(Number(pk.dataset.id)).bokken = Number(pk.dataset.pak); teken(); return; }
@@ -1128,7 +1138,7 @@ document.addEventListener('click', (e) => {
   }
   const op = e.target.closest('[data-open]'); if (op) { const id = Number(op.dataset.open); if (op.hasAttribute('data-gz')) { $('#zoekres').classList.remove('on'); $('#globaal').classList.remove('mopen'); $('#gzoek').value = ''; $('#gzoek').blur(); } const groep = op.closest('.sub-lijst, .agenda, .kolom-lijst'); if (groep) STAPEL = [...groep.querySelectorAll('.r[data-open]')].map((r) => Number(r.dataset.open)); else if (HUIDIG.includes(id)) STAPEL = HUIDIG.slice(); dicht(); meerDicht(); ga('detail', id); return; }
   const gv = e.target.closest('[data-gev]'); if (gv && !gv.dataset.v) { GEVONDEN = gv.dataset.gev; teken(); return; }
-  const v = e.target.closest('[data-v]'); if (v && v.dataset.gev) { dicht(); meerDicht(); STATUS = []; SOORT = []; ZOEK = ''; GEVONDEN = v.dataset.gev; ga(v.dataset.v, null, true); return; }
+  const v = e.target.closest('[data-v]'); if (v && v.dataset.gev) { dicht(); meerDicht(); STATUS = []; SOORT = []; DMAAND = []; ZOEK = ''; GEVONDEN = v.dataset.gev; ga(v.dataset.v, null, true); return; }
   if (v) { e.preventDefault(); dicht(); meerDicht(); if (v.dataset.kt) { KTAB = v.dataset.kt; if (v.dataset.v === 'klanten' && innerWidth >= 768 && KWEERGAVE === 'bord' && v.dataset.kt === 'verstuurd') KWEERGAVE = 'lijst'; } if (v.dataset.ht) HTAB = v.dataset.ht; ga(v.dataset.v); return; }
   const st = e.target.closest('[data-st]'); if (st) { STATUS = wissel(STATUS, st.dataset.st === 'alle' ? '' : st.dataset.st); DETAIL = null; VIEW = 'evenementen'; hashZetten(); tekenOpen(st); return; }
 });
