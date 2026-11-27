@@ -39,11 +39,11 @@ const GROEPEN_STANDAARD = [
   ['Inzicht', [['markt', 'Markt'], ['resultaten', 'Resultaten']]],
 ];
 const GROEPEN = HENK ? [['Henk', [['vandaag', 'Vandaag'], ['evenementen', 'Alle evenementen'], ['klanten', 'Klanten'], ['agenda', 'Agenda'], ['cijfers', 'Cijfers']]]] : GROEPEN_STANDAARD;
-const SECUNDAIR = HENK ? [['markt', 'Markt'], ['werkwijze', 'Zo werkt het'], ['instellingen', 'Instellingen']] : [['werkwijze', 'Zo werkt het'], ['instellingen', 'Instellingen']];
+const SECUNDAIR = HENK ? [['markt', 'Markt'], ['werkwijze', 'Zo gaat het werken'], ['instellingen', 'Instellingen']] : [['werkwijze', 'Zo gaat het werken'], ['instellingen', 'Instellingen']];
 // In de indeling voor Henk verwijzen de oude schermen naar de drie nieuwe.
 const HENKNAAR = HENK ? { overzicht: 'vandaag', planning: 'agenda', resultaten: 'cijfers' } : {};
 if (HENK) VIEW = 'vandaag';
-const MODULES_LIJST = [['vandaag', { naam: 'Vandaag', groep: 'Henk' }], ['agenda', { naam: 'Agenda', groep: 'Henk' }], ['cijfers', { naam: 'Cijfers', groep: 'Henk' }], ...GROEPEN_STANDAARD.flatMap(([g, l]) => l.map(([k, n]) => [k, { naam: n, groep: g }])), ['werkwijze', { naam: 'Zo werkt het', groep: 'Hulp' }], ['instellingen', { naam: 'Instellingen', groep: 'Beheer' }]];
+const MODULES_LIJST = [['vandaag', { naam: 'Vandaag', groep: 'Henk' }], ['agenda', { naam: 'Agenda', groep: 'Henk' }], ['cijfers', { naam: 'Cijfers', groep: 'Henk' }], ...GROEPEN_STANDAARD.flatMap(([g, l]) => l.map(([k, n]) => [k, { naam: n, groep: g }])), ['werkwijze', { naam: 'Zo gaat het werken', groep: 'Hulp' }], ['instellingen', { naam: 'Instellingen', groep: 'Beheer' }]];
 const MODULES = Object.fromEntries(MODULES_LIJST);
 if (HENK) { MODULES.klanten = { naam: 'Klanten', groep: 'Henk' }; MODULES.evenementen = { naam: 'Alle evenementen', groep: 'Henk' }; MODULES.bouw = { naam: 'Alle evenementen', groep: 'Henk' }; }
 const NAAST = ['werklijst', 'evenementen']; // detail naast de lijst; elders als lade
@@ -455,15 +455,16 @@ function werkwijzeScherm() {
   const ga = (k, label) => `<button class="link" data-v="${k}">${label}</button>`;
   const KOSTEN = 41, klein = 0.5 * PRIJS_BOK, groot = 4 * PRIJS_BOK, perDag = Math.round(SCAN.publicaties / 14);
   const maanden = Math.floor(PRIJS_BOK / KOSTEN);
+  const NTB = '<span class="ntb">nog te bouwen</span>';
   const MAAN = I('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
   const stappen = [
-    [MAAN, '\'s Nachts', 'RekRadar zoekt', `Hij leest alle nieuwe evenementvergunningen van Nederland (zo'n ${perDag} per dag) en zoekt bij elk evenement wie het organiseert en hoe je die mailt.`],
+    [MAAN, '\'s Nachts', 'RekRadar zoekt', `Hij leest de evenementvergunningen die gemeenten in het Gemeenteblad publiceren (zo'n ${perDag} per dag) en zoekt bij elk evenement wie het organiseert en hoe je die mailt.`],
     [ICON.mail, '\'s Ochtends', 'Jij kijkt en klikt', 'De mails staan klaar, beste kans bovenaan. Je leest ze na en verstuurt met één klik uit je eigen Outlook, met jouw naam.'],
-    [ICON.kalender, 'Daarna', 'De klant boekt', 'De klant antwoordt in je Outlook, of boekt zelf: aantal rekken, losplek op de kaart en betalen. De klus staat in je planning.']];
+    [ICON.kalender, 'Daarna', 'De klant boekt', `De klant antwoordt in je Outlook ${NTB}, of boekt en betaalt zelf: aantal rekken, losplek op de kaart en iDEAL ${NTB}. De klus staat in je planning.`]];
   const verschil = [
     ['Nieuwe klanten', 'Komen via je netwerk. Wie jou niet kent, belt je niet.', 'RekRadar vindt evenementen in heel Nederland, ook bij organisatoren die jou nog niet kennen.'],
     ['Aanbod sturen', 'Zelf een mail schrijven met prijs en voorstel.', 'De mail staat klaar. Nalezen en op versturen klikken.'],
-    ['Afspraken maken', 'Mails heen en weer over aantal en losplek.', 'De klant vult het zelf in en wijst de losplek aan op de kaart.'],
+    ['Afspraken maken', 'Mails heen en weer over aantal en losplek.', `De klant vult het zelf in en wijst de losplek aan op de kaart. ${NTB}`],
     ['Vaste klanten', 'Zelf onthouden wie je volgend jaar weer moet mailen.', '120 dagen voor het evenement staat de mail vanzelf weer klaar.']];
   const nacht = [
     ['De overheid publiceert', 'Elke gemeente zet vergunningen voor evenementen openbaar in het Gemeenteblad.'],
@@ -473,14 +474,14 @@ function werkwijzeScherm() {
   const beloftes = [
     ['Niets gaat vanzelf de deur uit', 'Elke mail en herinnering verstuur jij met één klik.'],
     ['Er wordt niets verzonnen', 'Een mailadres telt alleen als het echt op een website staat. De link staat erbij. Twijfel? Dan staat er "bellen" of "checken".'],
-    ['Je mail blijft van jou', 'RekRadar ziet alleen wie antwoordde en wanneer, nooit wat erin staat.'],
+    [`Je mail blijft van jou ${NTB}`, 'RekRadar ziet alleen wie antwoordde en wanneer, nooit wat erin staat. Antwoorden uit Outlook zien is nog niet gebouwd.'],
     ['Geen klantenlijst nodig', 'Alles komt uit openbare bronnen. Privé-adressen van mensen worden nooit gemaild.']];
   const kosten = [['Database en nachtwerk', 'Supabase, servers in Frankfurt (EU)', '$25 per maand'],
     ['AI die vergunningen en websites leest', 'Claude, van Anthropic', 'enkele euro\'s, grens op €20'],
     ['Zoeken op internet', 'Serper (Google) en Brave', '$50 voor 50.000 zoekopdrachten, Brave gratis'],
     ['Bevestigingen en weekmail', 'Resend', 'gratis tot 3.000 per maand'],
     ['Aanbodmails', 'Je eigen Outlook', 'zit al in je Microsoft 365'],
-    ['iDEAL-betalingen', 'Mollie', '€0,32 per betaling']];
+    [`iDEAL-betalingen ${NTB}`, 'Mollie', '€0,32 per betaling']];
   const dag = HENK
     ? [['vandaag', 'Vandaag', 'Kijk wat er moet. Begin altijd hier.'], ['evenementen', 'Alle evenementen', 'Alles wat RekRadar vond, ook wat nog geen mail kreeg.'], ['agenda', 'Agenda', 'Wat er geleverd moet worden.']]
     : [['overzicht', 'Overzicht', 'Kijk wat er moet. Begin altijd hier.'], ['werklijst', 'Werklijst', 'Lees de klaarstaande mails na en verstuur ze.'], ['klanten', 'Klanten', 'Zie wie antwoordde en wie boekte.']];
@@ -553,7 +554,7 @@ function mailHtml(x) {
   const o = x.org, m = x.mail || { bokken: x.bokken, datum: x.datum, transport: x.transport };
   x = Object.assign({}, x, { bokken: m.bokken, datum: m.datum, transport: m.transport });
   return `<div class="mail"><div class="mk"><div class="mk-label">${ICON.mail}E-mail</div><span>Aan</span><b style="font-weight:500">${esc(o.email)}</b><span>Onderwerp</span><b style="font-weight:500">Fietsenrekken bij ${esc(x.naam)}?</b></div><div class="mb"><p>Beste ${esc(o.naam)},</p>
-<p>We zagen dat ${esc(x.naam)} ${x.vast || x.s === 'verwacht' ? 'er weer aankomt' : 'eraan komt'}. Daar denken we graag in mee.</p>
+<p>We zagen dat ${esc(x.naam)} ${x.vast || x.s === 'verwacht' ? 'er weer aankomt' : 'eraan komt'}.${x.vast ? ` Vorig jaar stonden onze ${x.vast.rekken} rekken bij ${esc(x.naam)}.` : ''} Daar denken we graag in mee.</p>
 <p>Komen er bezoekers op de fiets? Dan plaatsen wij fietsenrekken voor jullie. Zo staan alle fietsen netjes en hebben jullie er geen omkijken naar.</p>
 ${voorstelZin(x)}
 <p>Interesse? Via de knop hieronder zie je het voorstel en geef je door waar we kunnen lossen. Betalen kan via iDEAL of op factuur.</p><p><button class="mknop" data-a="probeer" data-id="${x.id}" title="Toon wat de klant ziet">Bekijk en boek</button></p>
@@ -688,7 +689,7 @@ ${x.pub ? `<dt>Bron</dt><dd>${pubLink(x, 'vergunning bekijken')}</dd>` : ''}</dl
     : `<dl class="eig"><dt>Naam</dt><dd>${esc(o.naam)}</dd>${o.email ? `<dt>Mail</dt><dd>${esc(o.email)} <span class="mu">· ${esc(o.soort)}</span></dd>` : '<dt>Mail</dt><dd class="mu">geen mailadres gevonden</dd>'}${o.bron ? `<dt>Gevonden op</dt><dd>${esc(o.bron)}</dd>` : ''}${o.zek ? `<dt>Zekerheid</dt><dd>${o.zek}%</dd>` : ''}${o.formulier ? `<dt>Formulier</dt><dd>${esc(o.formulier)}</dd>` : ''}${o.telefoon ? `<dt>Telefoon</dt><dd>${belbaar(esc(o.telefoon))}</dd>` : ''}</dl>`}</section>`;
   const voortgang = isKlant ? `<section class="sectie"><h2>Voortgang</h2><div class="stappen">${FASEN.map((s, j) => { const i = faseIdx(x); return `<div class="${j < i || (j === i && x.s !== 'antwoord') ? 'ok' : j === i ? 'nu' : ''}">${s}</div>`; }).join('')}</div>
 <dl class="eig" style="margin-top:12px">${x.verstuurd ? `<dt>Aanbod</dt><dd>verstuurd ${sindsTekst(x.verstuurd)}${x.herinnerd ? ', herinnering ' + sindsTekst(x.herinnerd) : ''}</dd>` : ''}
-${x.boeking ? `<dt>Geboekt</dt><dd>${euro(x.boeking.prijs)} · ${x.bokken * REKKEN_BOK} rekken</dd><dt>Betaling</dt><dd>${x.boeking.betaling === 'factuur' ? `${betTekst(x)}${x.boeking.betaald ? ' op ' + datumKort(x.boeking.betaald) : ''}${x.boeking.factuurMail ? ' · ' + esc(x.boeking.factuurMail) : ''}${x.boeking.inkoop ? ' · kenmerk ' + esc(x.boeking.inkoop) : ''}` : 'iDEAL, betaald'}</dd><dt>Lossen</dt><dd>${esc(x.boeking.los)}${x.boeking.punt && x.boeking.punt.lat != null ? ` · <a href="https://www.google.com/maps/dir/?api=1&destination=${x.boeking.punt.lat},${x.boeking.punt.lng}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>${x.boeking.bouw && x.boeking.bouw.belMe ? '<dt>Bouwen</dt><dd><span class="open">Klant wil even bellen</span> over waar de rekken komen</dd>' : ''}${x.boeking.bouw && x.boeking.bouw.lijnen && x.boeking.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${x.boeking.bouw.lijnen.length} ${x.boeking.bouw.lijnen.length === 1 ? 'rij' : 'rijen'} getekend${x.boeking.bouw.meter ? `, samen ± ${x.boeking.bouw.meter} m` : ''}${x.boeking.bouw.adres ? ' · ' + esc(x.boeking.bouw.adres) : ''}<div class="bouwkaart" id="pbouw" data-id="${x.id}">${bouwSvg(x.boeking)}<span class="bk-leg"><i class="l"></i>rekken <i class="p"></i>lossen</span></div></dd>` : ''}<dt>Op de dag</dt><dd>${belbaar(esc(x.boeking.contact))}</dd>` : ''}
+${x.boeking ? `<dt>Geboekt</dt><dd>${euro(x.boeking.prijs)} · ${x.bokken * REKKEN_BOK} rekken</dd><dt>Betaling</dt><dd>${x.boeking.betaling === 'factuur' ? `${betTekst(x)}${x.boeking.betaald ? ' op ' + datumKort(x.boeking.betaald) : ''}${x.boeking.factuurMail ? ' · ' + esc(x.boeking.factuurMail) : ''}${x.boeking.inkoop ? ' · kenmerk ' + esc(x.boeking.inkoop) : ''}` : 'iDEAL, betaald'}</dd><dt>Lossen</dt><dd>${esc(x.boeking.los)}${x.boeking.punt && x.boeking.punt.lat != null ? ` · <a href="https://www.google.com/maps/dir/?api=1&destination=${x.boeking.punt.lat},${x.boeking.punt.lng}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>${x.boeking.bouw && x.boeking.bouw.belMe ? '<dt>Bouwen</dt><dd><span class="open">Klant wil even bellen</span> over waar de rekken komen</dd>' : ''}${x.boeking.bouw && x.boeking.bouw.lijnen && x.boeking.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${stukTekst(x.boeking.bouw.lijnen)} getekend${x.boeking.bouw.meter ? `, samen ± ${x.boeking.bouw.meter} m` : ''}${x.boeking.bouw.adres ? ' · ' + esc(x.boeking.bouw.adres) : ''}<div class="bouwkaart" id="pbouw" data-id="${x.id}">${bouwSvg(x.boeking)}<span class="bk-leg"><i class="l"></i>rekken <i class="p"></i>lossen</span></div></dd>` : ''}<dt>Op de dag</dt><dd>${belbaar(esc(x.boeking.contact))}</dd>` : ''}
 ${x.volgend ? (() => { const v = DB.vind(x.volgend); return `<dt>Volgend jaar</dt><dd>${v.s === 'gepland' ? `mail wordt klaargezet op ${metJaar(v.klaarOp)}` : 'mail staat klaar'} · <button class="link" data-open="${x.volgend}">bekijk</button></dd>`; })() : ''}</dl></section>` : '';
   const aantal = isKlant ? '' : aantalSectie(x, vrij);
   const mail = o.email && x.s !== 'geleverd' ? `<section class="sectie"><h2>${isKlant ? 'Verstuurde mail' : 'Mail die de klant krijgt'}</h2>${mailHtml(x)}${!isKlant ? `<div class="klantzicht"><div><b>Wat ziet de klant na “Bekijk en boek”?</b><span>Een boekpagina: aantal, losplek, waar de rekken komen, contact en betalen.</span></div><button class="btn" data-a="probeer" data-id="${x.id}">Bekijk wat de klant ziet →</button></div>` : ''}</section>` : '';
@@ -730,7 +731,7 @@ const PDOK = { suggest: 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/sugge
   foto: 'https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0/Actueel_orthoHR/EPSG:3857/{z}/{x}/{y}.jpeg',
   kaart: 'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png' };
 const GEEN_KAART = 'Tik op de schets waar de vrachtwagen kan stoppen.';
-const DEMO_MELDING = '<b>Kaart geblokkeerd in dit venster.</b> Daarom zie je een schets. De versie met adres zoeken en luchtfoto staat op <a href="https://thijmenkant.github.io/hekradar-demo/" target="_blank" rel="noopener">thijmenkant.github.io/hekradar-demo</a>.';
+const DEMO_MELDING = '<b>Kaart geblokkeerd in dit venster.</b> Daarom zie je een schets. De versie met adres zoeken en luchtfoto staat op <a href="https://thijmenkant.github.io/rekradar-demo/" target="_blank" rel="noopener">thijmenkant.github.io/rekradar-demo</a>.';
 let losPunt = null, losAdres = '', bouwAdres = '', bouwLijnen = [[]], bouwKlaar = false, bouwSchets = false, leafletBelofte = null, zoekTimer = null, pKaart = null;
 const K = {}; // K.los / K.bouw: { map, lagen, pin, lijnen, losRef }
 function laadLeaflet() {
@@ -746,7 +747,7 @@ function naarSchets() {
   document.querySelectorAll('.demomelding').forEach((m) => { m.innerHTML = DEMO_MELDING; m.hidden = false; });
   document.querySelectorAll('#fadres, #fbadres').forEach((i) => { i.closest('label').hidden = true; });
   const v = $('#kaartvak'); if (v) { v.outerHTML = schetsHtml('kaartje', 'Schets: tik om de losplek te kiezen'); $('#kaartnoot').textContent = GEEN_KAART; }
-  const b = $('#bkaartvak'); if (b) { b.outerHTML = schetsHtml('bschets', 'Schets: tik punten aan waar de rekken moeten komen', '<svg aria-hidden="true"></svg>'); $('#bkaartnoot').textContent = 'Tik op de schets punt voor punt aan waar de rij rekken moet komen.'; }
+  const b = $('#bkaartvak'); if (b) { b.outerHTML = schetsHtml('bschets', 'Schets: tik punten aan waar de rekken moeten komen', '<svg aria-hidden="true"></svg>'); $('#bkaartnoot').textContent = 'Tik op de schets punt voor punt aan waar de rekken komen. Tik op het eerste punt om een gebied te sluiten, of op het laatste punt om een rij af te ronden.'; }
   tekenBouw();
 }
 function zetLosPunt(lat, lng) {
@@ -768,15 +769,26 @@ async function startKaarten(x) {
   K.los.pin.on('dragend', () => { const p = K.los.pin.getLatLng(); zetLosPunt(p.lat, p.lng); });
   K.los.map.on('click', (ev) => { K.los.pin.setLatLng(ev.latlng); zetLosPunt(ev.latlng.lat, ev.latlng.lng); });
   K.bouw.lijnen = L.layerGroup().addTo(K.bouw.map);
-  K.bouw.map.on('click', (ev) => { if (!bouwKlaar) voegPunt([+ev.latlng.lat.toFixed(6), +ev.latlng.lng.toFixed(6)]); });
+  K.bouw.map.doubleClickZoom.disable();
+  K.bouw.map.on('click', (ev) => { if (!bouwKlaar) voegPunt([+ev.latlng.lat.toFixed(6), +ev.latlng.lng.toFixed(6)], (q) => K.bouw.map.latLngToContainerPoint(q).distanceTo(ev.containerPoint)); });
   setTimeout(() => { if (K.los && !geladen && fouten) naarSchets(); }, 3500);
 }
-// ---------- tekenen: punten aantikken, lijn per rij rekken ----------
+// ---------- tekenen: punten aantikken; elk stuk is een rij (open) of een gebied (gesloten) ----------
+// Tik op het eerste punt: gebied sluit. Tik op het laatste punt: rij is af. Daarna begint de volgende tik een nieuw stuk.
+const RAAK = 16; // px
+const stukTekst = (ls) => { const g = ls.filter((l) => gesloten(l)).length, r = ls.length - g; return [r ? `${r} ${r === 1 ? 'rij' : 'rijen'}` : '', g ? `${g} ${g === 1 ? 'gebied' : 'gebieden'}` : ''].filter(Boolean).join(' en '); };
+const gesloten = (l) => l.length > 3 && l[0][0] === l[l.length - 1][0] && l[0][1] === l[l.length - 1][1];
 const bouwPunten = () => bouwLijnen.reduce((s, l) => s + l.length, 0);
 const echteLijnen = () => bouwLijnen.filter((l) => l.length > 1);
 function meterTussen(a, b) { const r = Math.PI / 180, dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r, h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2; return 6371000 * 2 * Math.asin(Math.sqrt(h)); }
 function lijnMeter(l) { let m = 0; for (let i = 1; i < l.length; i++) m += meterTussen(l[i - 1], l[i]); return m; }
-function voegPunt(p) { bouwLijnen[bouwLijnen.length - 1].push(p); const f = $('#ffout'); if (f) f.textContent = ''; tekenBouw(); }
+function voegPunt(p, px) {
+  const l = bouwLijnen[bouwLijnen.length - 1], f = $('#ffout'); if (f) f.textContent = '';
+  if (px && l.length >= 3 && px(l[0]) < RAAK) { l.push(l[0].slice()); bouwLijnen.push([]); tekenBouw(); return; }
+  if (px && l.length >= 2 && px(l[l.length - 1]) < RAAK) { bouwLijnen.push([]); tekenBouw(); return; }
+  if (px && l.length && px(l[l.length - 1]) < RAAK) return; // dubbel tikken op hetzelfde punt
+  l.push(p); tekenBouw();
+}
 function tekenActie(a) {
   const laatste = bouwLijnen[bouwLijnen.length - 1];
   if (a === 'ongedaan') { if (laatste.length) laatste.pop(); else if (bouwLijnen.length > 1) { bouwLijnen.pop(); bouwLijnen[bouwLijnen.length - 1].pop(); } }
@@ -788,15 +800,20 @@ function tekenActie(a) {
 function tekenBouw() {
   if (K.bouw) {
     K.bouw.lijnen.clearLayers();
-    bouwLijnen.forEach((l) => { if (l.length > 1) { L.polyline(l, { color: '#1b1e20', weight: 9, opacity: .55, interactive: false }).addTo(K.bouw.lijnen); L.polyline(l, { color: '#ffd400', weight: 5, interactive: false }).addTo(K.bouw.lijnen); } if (!bouwKlaar) l.forEach((p) => L.circleMarker(p, { radius: 5, color: '#1b1e20', weight: 2, fillColor: '#ffd400', fillOpacity: 1, interactive: false }).addTo(K.bouw.lijnen)); });
+    bouwLijnen.forEach((l, i) => { const open = i === bouwLijnen.length - 1 && !bouwKlaar; if (gesloten(l)) L.polygon(l, { stroke: false, fillColor: '#ffd400', fillOpacity: .3, interactive: false }).addTo(K.bouw.lijnen); if (l.length > 1) { L.polyline(l, { color: '#1b1e20', weight: 9, opacity: .55, interactive: false }).addTo(K.bouw.lijnen); L.polyline(l, { color: '#ffd400', weight: 5, interactive: false }).addTo(K.bouw.lijnen); } if (open && l.length >= 3) L.circleMarker(l[0], { radius: 11, color: '#ffd400', weight: 3, fill: false, className: 'sluitpunt', interactive: false }).addTo(K.bouw.lijnen); if (!bouwKlaar) l.forEach((p) => L.circleMarker(p, { radius: 5, color: '#1b1e20', weight: 2, fillColor: '#ffd400', fillOpacity: 1, interactive: false }).addTo(K.bouw.lijnen)); });
   } else {
     const vak = $('#bschets'), svg = vak && vak.querySelector('svg');
-    if (svg) { const r = vak.getBoundingClientRect(), xy = ([x, y]) => `${(x * r.width / 100).toFixed(1)},${(y * r.height / 100).toFixed(1)}`; svg.innerHTML = bouwLijnen.map((l) => (l.length > 1 ? `<polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#1b1e20" stroke-opacity=".55" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#ffd400" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>` : '') + (bouwKlaar ? '' : l.map((p) => { const [a, b] = xy(p).split(','); return `<circle cx="${a}" cy="${b}" r="5" fill="#ffd400" stroke="#1b1e20" stroke-width="2"/>`; }).join(''))).join(''); }
+    if (svg) { const r = vak.getBoundingClientRect(), xy = ([x, y]) => `${(x * r.width / 100).toFixed(1)},${(y * r.height / 100).toFixed(1)}`; svg.innerHTML = bouwLijnen.map((l, i) => (gesloten(l) ? `<polygon points="${l.map(xy).join(' ')}" fill="#ffd400" fill-opacity=".3"/>` : '') + (i === bouwLijnen.length - 1 && !bouwKlaar && l.length >= 3 ? (() => { const [a, b] = xy(l[0]).split(','); return `<circle class="sluitpunt" cx="${a}" cy="${b}" r="11" fill="none" stroke="#ffd400" stroke-width="3"/>`; })() : '') + (l.length > 1 ? `<polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#1b1e20" stroke-opacity=".55" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#ffd400" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>` : '') + (bouwKlaar ? '' : l.map((p) => { const [a, b] = xy(p).split(','); return `<circle cx="${a}" cy="${b}" r="5" fill="#ffd400" stroke="#1b1e20" stroke-width="2"/>`; }).join(''))).join(''); }
   }
   const st = $('#bstatus'); if (!st) return;
   const n = echteLijnen().length, m = bouwSchets ? 0 : echteLijnen().reduce((s, l) => s + lijnMeter(l), 0);
-  const wat = n ? `${n} ${n === 1 ? 'lijn' : 'lijnen'}${m ? `, samen ± ${Math.round(m)} m` : ''}` : '';
-  st.textContent = bouwKlaar ? `Tekening klaar: ${wat}. Henk krijgt dit bij je boeking.` : n ? `${wat} getekend. Nog een rij? Tik op “Nieuwe lijn”.` : bouwPunten() ? 'Tik het volgende punt aan.' : '';
+  const wat = n ? `${stukTekst(echteLijnen())}${m ? `, samen ± ${Math.round(m)} m` : ''}` : '';
+  const nu = bouwLijnen[bouwLijnen.length - 1].length;
+  st.textContent = bouwKlaar ? `Tekening klaar: ${wat}. Henk krijgt dit bij je boeking.`
+    : nu >= 3 ? 'Tik op het eerste punt (met de ring) om het gebied te sluiten, of op het laatste punt om de rij af te ronden.'
+    : nu === 2 ? `${stukTekst([bouwLijnen[bouwLijnen.length - 1]])} getekend. Tik op het laatste punt om de rij af te ronden, of teken verder.`
+    : nu ? 'Tik het volgende punt aan.'
+    : n ? `${wat} getekend. Tik ergens anders om nog een stuk te beginnen, of druk op Tekening klaar.` : '';
   const kl = $('[data-teken="klaar"]'); if (kl) { kl.textContent = bouwKlaar ? 'Wijzigen' : 'Tekening klaar'; kl.classList.toggle('p', !bouwKlaar); }
   document.querySelectorAll('[data-teken]:not([data-teken="klaar"])').forEach((b) => { b.disabled = bouwKlaar; });
   const vak = $('#bkaartvak, #bschets'); if (vak) vak.classList.toggle('vast', bouwKlaar);
@@ -843,7 +860,7 @@ function bouwSvg(b) {
   const W = 320, H = 170, pad = 22, bx = Math.max(...xs) - Math.min(...xs) || 1e-6, by = Math.max(...ys) - Math.min(...ys) || 1e-6, s = Math.min((W - 2 * pad) / bx, (H - 2 * pad) / by);
   const ox = (W - bx * s) / 2, oy = (H - by * s) / 2, xy = (p) => { const [a, c] = proj(p); return `${(ox + (a - Math.min(...xs)) * s).toFixed(1)},${(oy + (c - Math.min(...ys)) * s).toFixed(1)}`; };
   const pinPt = punt ? (schets ? (punt.x != null ? [punt.x, punt.y] : null) : [punt.lat, punt.lng]) : null;
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schets van losplek en bouwplek">${lijnen.map((l) => `<polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#1b1e20" stroke-opacity=".5" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#e8b800" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}${pinPt ? (() => { const [a, c] = xy(pinPt).split(',').map(Number); return `<circle cx="${a}" cy="${c}" r="7" fill="#b3261e" stroke="#fff" stroke-width="2.5"/><text x="${a + 11}" y="${c + 4}" font-size="11" font-weight="600" fill="#1b1e20">lossen</text>`; })() : ''}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schets van losplek en bouwplek">${lijnen.map((l) => `${gesloten(l) ? `<polygon points="${l.map(xy).join(' ')}" fill="#e8b800" fill-opacity=".28"/>` : ''}<polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#1b1e20" stroke-opacity=".5" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${l.map(xy).join(' ')}" fill="none" stroke="#e8b800" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}${pinPt ? (() => { const [a, c] = xy(pinPt).split(',').map(Number); return `<circle cx="${a}" cy="${c}" r="7" fill="#b3261e" stroke="#fff" stroke-width="2.5"/><text x="${a + 11}" y="${c + 4}" font-size="11" font-weight="600" fill="#1b1e20">lossen</text>`; })() : ''}</svg>`;
 }
 // ---------- voorbeeldschets lossen + opbouwen (verzonnen boekingen zonder getekende kaart) ----------
 // Vier plattegronden die passen bij de losplek-omschrijving. Coördinaten in een vlak van 320 × 190.
@@ -923,8 +940,8 @@ ${vb ? `<label class="vink"><input type="checkbox" id="fvorig"><span>Zelfde losp
 <label>Ander adres dan de losplek? (mag leeg)<input id="fbadres" autocomplete="off" placeholder="Adres, postcode of Google Maps-link" aria-describedby="bkaartnoot"></label>
 <div class="adreslijst" id="badreslijst" role="listbox" aria-label="Gevonden adressen"></div>
 <div class="kaartvak" id="bkaartvak" data-k="bouw"><div id="bkaart" class="kaart teken" aria-label="Kaart om de rekken op te tekenen"></div><div class="kaart-wissel" role="group" aria-label="Kaartweergave"><button type="button" data-laag="foto" aria-pressed="true">Luchtfoto</button><button type="button" data-laag="kaart" aria-pressed="false">Kaart</button></div></div>
-<span class="mu" id="bkaartnoot" style="font-size:13px">Tik punt voor punt aan waar de rij rekken moet komen. Elke rij is één lijn.</span>
-<div class="tekenbalk" role="group" aria-label="Tekenen"><button type="button" class="btn sm" data-teken="ongedaan">Punt terug</button><button type="button" class="btn sm" data-teken="nieuw">Nieuwe lijn</button><button type="button" class="btn sm" data-teken="wis">Wis alles</button><button type="button" class="btn sm p" data-teken="klaar">Tekening klaar</button></div>
+<span class="mu" id="bkaartnoot" style="font-size:13px">Tik punt voor punt aan waar de rekken komen. Tik op het eerste punt om een gebied te sluiten, of op het laatste punt om een rij af te ronden. Daarna teken je gewoon het volgende stuk.</span>
+<div class="tekenbalk" role="group" aria-label="Tekenen"><button type="button" class="btn sm" data-teken="ongedaan">Punt terug</button><button type="button" class="btn sm" data-teken="nieuw">Nieuw stuk</button><button type="button" class="btn sm" data-teken="wis">Wis alles</button><button type="button" class="btn sm p" data-teken="klaar">Tekening klaar</button></div>
 <span class="kort" id="bstatus" aria-live="polite"></span>
 <label class="vink"><input type="checkbox" id="fbelme"><span>Weet je het nog niet precies? Dan belt Henk je even over waar de rekken komen.</span></label></section>
 <section class="fb"><b><i class="stap-n">4</i>Contact op de dag zelf</b><label>Naam<input id="fnaam" autocomplete="name"></label><label>Telefoon<input id="ftel" type="tel" autocomplete="tel"></label></section>
@@ -974,7 +991,7 @@ function vandaagScherm() {
   const eerst = V.antwoord.length + lev7.length + vast.length + V.facturen.length, later = mails.length + V.herinner.length + bellen.length, n = eerst + later;
   const kern = `<div class="kern"><div><span>Eerst doen</span><b>${eerst}</b></div><div><span>Als je tijd hebt</span><b>${later}</b></div><div><span>Facturen open</span><b class="${fOpen ? 'let' : ''}">${euro(fOpen)}</b></div></div>`;
   const kop = (t, u) => `<div class="cc-label"><b>${t}</b> ${u}</div>`;
-  return `${paginakop('vandaag', { doel: `Goedemorgen Henk. ${hoofdletter(datumLang(VANDAAG))}: dit is wat er vandaag van jou nodig is, belangrijkste eerst.`, extra: kern })}
+  return `${paginakop('vandaag', { doel: `Demo-dag: ${datumLang(VANDAAG)}. Dit is wat er vandaag van jou nodig is, belangrijkste eerst.`, extra: kern })}
 <div class="inhoud henk-vandaag">
 ${(() => { const n = DB.alle().filter((x) => x.gevonden === VANDAAG && x.s !== 'weg').length; return n ? `<div class="scanbalk"><span class="live"></span><span><b>${n} nieuwe vergunningen</b> gevonden in de scan van vannacht</span><button class="btn sm" data-v="evenementen" data-gev="vandaag">Bekijk de nieuwe</button></div>` : ''; })()}
 ${eerst ? kop('Eerst', 'klanten en klussen die op jou wachten') : ''}
@@ -1001,7 +1018,7 @@ function werkbonHtml(x) {
   const b = x.boeking || {}, route = b.punt && b.punt.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${b.punt.lat},${b.punt.lng}` : '';
   return `<div class="werkbon"><div class="wb-kop"><div><b>${esc(x.naam)}</b><span>${hoofdletter(datumLang(x.datum))} · ${esc(x.plaats)}</span></div><b class="wb-n">${x.bokken * REKKEN_BOK} rekken</b></div>
 <dl class="eig"><dt>Klant</dt><dd>${esc(x.org ? x.org.naam : '')}</dd><dt>Lossen</dt><dd>${esc(b.los || 'nog doorgeven')}${route ? ` · <a href="${route}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>
-${b.bouw && b.bouw.belMe ? '<dt>Bouwen</dt><dd>Nog afspreken: klant wil even bellen</dd>' : ''}${b.bouw && b.bouw.lijnen && b.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${b.bouw.lijnen.length} ${b.bouw.lijnen.length === 1 ? 'rij' : 'rijen'}${b.bouw.meter ? `, samen ± ${b.bouw.meter} m` : ''}<div class="bouwkaart">${bouwSvg(b)}</div></dd>` : ''}
+${b.bouw && b.bouw.belMe ? '<dt>Bouwen</dt><dd>Nog afspreken: klant wil even bellen</dd>' : ''}${b.bouw && b.bouw.lijnen && b.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${stukTekst(b.bouw.lijnen)}${b.bouw.meter ? `, samen ± ${b.bouw.meter} m` : ''}<div class="bouwkaart">${bouwSvg(b)}</div></dd>` : ''}
 <dt>Contact op de dag</dt><dd>${belbaar(esc(b.contact || 'nog doorgeven'))}</dd><dt>Afstand</dt><dd>${kmTekst(x)} vanaf Almkerk</dd><dt>Betaling</dt><dd>${betTekst(x)}</dd></dl>${schetsenHtml(x)}
 <div class="wb-voet noprint"><button class="btn p" onclick="print()">Printen</button><span class="mu klein">Geef dit blad aan wie levert. RekRadar verstuurt niets.</span></div></div>`;
 }
@@ -1066,7 +1083,7 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.globaal') && !e.target.closest('[data-zoekm]')) { $('#zoekres') && $('#zoekres').classList.remove('on'); $('#globaal') && $('#globaal').classList.remove('mopen'); }
   const kaartje = e.target.closest('#kaartje');
   if (kaartje) { const r = kaartje.getBoundingClientRect(); if (!pin || !kaartje.contains(pin)) { pin = document.createElement('div'); pin.className = 'pin'; kaartje.appendChild(pin); } pin.style.left = (e.clientX - r.left) + 'px'; pin.style.top = (e.clientY - r.top) + 'px'; losPunt = { schets: true, x: +((e.clientX - r.left) / r.width * 100).toFixed(1), y: +((e.clientY - r.top) / r.height * 100).toFixed(1) }; $('#loscoord').textContent = 'Losplek gekozen op de schets.'; $('#ffout').textContent = ''; return; }
-  const bs = e.target.closest('#bschets'); if (bs) { if (!bouwKlaar) { const r = bs.getBoundingClientRect(); voegPunt([+((e.clientX - r.left) / r.width * 100).toFixed(1), +((e.clientY - r.top) / r.height * 100).toFixed(1)]); } return; }
+  const bs = e.target.closest('#bschets'); if (bs) { if (!bouwKlaar) { const r = bs.getBoundingClientRect(); voegPunt([+((e.clientX - r.left) / r.width * 100).toFixed(1), +((e.clientY - r.top) / r.height * 100).toFixed(1)], ([x, y]) => Math.hypot(x * r.width / 100 - (e.clientX - r.left), y * r.height / 100 - (e.clientY - r.top))); } return; }
   const ak = e.target.closest('[data-antw]'); if (ak) { const box = ak.closest('.antw'), x = DB.vind(Number(box.dataset.id)), v = antwoordVoorstellen(x)[Number(ak.dataset.antw)]; $('#antwtekst').value = v.tekst; $('#antwfout').textContent = ''; box.querySelectorAll('[data-antw]').forEach((b) => b.setAttribute('aria-pressed', b === ak)); return; }
   const tk = e.target.closest('[data-teken]'); if (tk) { tekenActie(tk.dataset.teken); return; }
   const pd = e.target.closest('[data-pdok]'); if (pd) { const d = pd.dataset.doel; $(d === 'bouw' ? '#badreslijst' : '#adreslijst').innerHTML = ''; kiesAdres(pd.dataset.pdok, pd.textContent, d); return; }

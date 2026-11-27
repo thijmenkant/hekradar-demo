@@ -546,7 +546,8 @@ details.meer-inst[open] > summary::before { content: '▾ '; }
 .keten .klant .wie { color: var(--let-tekst); }
 .keten b { display: block; font: 600 13px/1.25 var(--merk); color: var(--x-titel); margin: 4px 0 6px; }
 .keten p { margin: 0; font-size: 12.5px; color: var(--ink2); }
-/* Zo werkt het: uitleg voor Henk */
+/* Zo gaat het werken: uitleg voor Henk */
+.ntb { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 6px; border: 1px dashed var(--let); border-radius: 2px; background: var(--let-bg); color: var(--let-tekst); font: 600 10.5px/1.5 var(--tekst); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
 .zw { max-width: 1040px; }
 .zw-held { background: var(--x-donker); color: #fff; padding: 26px 28px; border-radius: var(--rad); border-left: 5px solid var(--g400); }
 .zw-held p { margin: 0; font-size: 15px; color: var(--x-donker-mu); }
@@ -714,10 +715,12 @@ details.nog[open] > summary { display: none; }
 .bon-tot b { font: 700 20px/1 var(--tekst); letter-spacing: -.01em; }
 .bon-let { margin-top: 6px; color: var(--let-tekst); background: var(--let-bg); padding: 5px 8px; border-radius: 2px; font-size: 12px; }
 .kp-regel { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+@keyframes sluit { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.sluitpunt { animation: sluit 1.2s ease-in-out infinite; }
 @keyframes flits { 0% { background: #fff3a6; box-shadow: 0 0 0 4px #fff3a6; } 100% { background: transparent; box-shadow: 0 0 0 4px transparent; } }
 .flits { animation: flits 1.1s ease-out; }
 @media (max-width: 600px) { .seg.seg5 { grid-template-columns: repeat(2, 1fr); } .seg.seg5 > * { border-top: 1px solid var(--lijn2); } .seg.seg5 > :nth-child(odd) { border-left: 0; } .seg.seg5 > :nth-child(-n+2) { border-top: 0; } .seg.seg5 .seg-zelf { grid-column: 1 / -1; flex-direction: row; gap: 10px; padding: 9px; } .trans { grid-template-columns: 1fr; gap: 6px; } }
-@media (prefers-reduced-motion: reduce) { .flits { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .flits, .sluitpunt { animation: none; } }
 .mail { border: 1px solid #3a4046; border-radius: var(--rad); font-size: 13px; line-height: 1.55; overflow: hidden; }
 /* Mailkop donkergrijs: je ziet meteen dat dit een e-mail is */
 .mail .mk { padding: 10px 12px; background: #3a4046; color: #fff; display: grid; grid-template-columns: 68px 1fr; gap: 2px 8px; font-size: 12px; }
@@ -1029,9 +1032,10 @@ details.nog[open] > summary { display: none; }
   .kern b { font-size: 15px; }
   .kern span { font-size: 11px; }
   .weergave { display: none; }
-  .onder { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; bottom: 0; left: 0; right: 0; background: var(--x-nav); border-top: 1px solid var(--x-nav-rand); z-index: 40; padding-bottom: env(safe-area-inset-bottom); }
-  .onder button { border: 0; background: none; height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--x-nav-n); cursor: pointer; position: relative; }
+  .onder { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--x-nav); border-top: 1px solid var(--x-nav-rand); z-index: 40; padding-bottom: env(safe-area-inset-bottom); }
+  .onder button { flex: 1 1 auto; min-width: 0; padding: 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 0; background: none; height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--x-nav-n); cursor: pointer; position: relative; }
   .onder button svg { width: 20px; height: 20px; }
+  @media (max-width: 380px) { .onder button { font-size: 10px; letter-spacing: -.02em; } }
   .onder button.on { color: var(--x-nav-hover-tekst); font-weight: 600; }
   .onder button.on::before { content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; background: var(--x-nav-ind); }
   .onder em { position: absolute; top: 6px; left: calc(50% + 6px); font-style: normal; font-size: 10px; background: var(--urg); color: #fff; border-radius: 8px; padding: 0 5px; line-height: 15px; font-weight: 600; }

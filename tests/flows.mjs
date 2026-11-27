@@ -45,9 +45,9 @@ for (const [w, h] of [[1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
   await p.waitForSelector('#kaartje', { timeout: 15000 }); t(W + 'zonder internet: schets + uitleg', (await txt(p, '.demomelding')).includes('geblokkeerd') && !(await p.isVisible('#fadres')));
   await p.click('#kaartje', { position: { x: 80, y: 60 } }); t(W + 'losplek gekozen', (await txt(p, '#loscoord')).includes('gekozen'));
   await p.fill('#fnaam', 'Test'); await p.fill('#ftel', '0612345678'); await p.click('#fknop'); t(W + 'validatie bouwplek', (await txt(p, '#ffout')).includes('stap 3'));
-  await p.click('#bschets', { position: { x: 40, y: 60 } }); await p.click('#bschets', { position: { x: 200, y: 70 } }); t(W + 'lijn getekend', (await n(p, '#bschets polyline')) === 2 && (await txt(p, '#bstatus')).includes('1 lijn'));
+  await p.click('#bschets', { position: { x: 40, y: 60 } }); await p.click('#bschets', { position: { x: 200, y: 70 } }); t(W + 'lijn getekend', (await n(p, '#bschets polyline')) === 2 && (await txt(p, '#bstatus')).includes('1 rij'));
   await p.click('[data-teken="nieuw"]'); await p.click('#bschets', { position: { x: 60, y: 150 } }); await p.click('[data-teken="ongedaan"]'); await p.click('#bschets', { position: { x: 60, y: 160 } }); await p.click('#bschets', { position: { x: 220, y: 170 } });
-  await p.click('[data-teken="klaar"]'); t(W + 'tekening klaar', (await txt(p, '#bstatus')).includes('Tekening klaar: 2 lijnen') && await p.isDisabled('[data-teken="wis"]'));
+  await p.click('[data-teken="klaar"]'); t(W + 'tekening klaar', (await txt(p, '#bstatus')).includes('Tekening klaar: 2 rijen') && await p.isDisabled('[data-teken="wis"]'));
   await p.click('#bschets', { position: { x: 300, y: 30 } }); t(W + 'na klaar niet meer tekenen', (await n(p, '#bschets circle')) === 0); await p.fill('#fnaam', 'Test'); await p.fill('#ftel', '0612345678');
   await p.check('input[value="factuur"]'); await p.check('#fok'); await p.click('#fknop');
   t(W + 'factuurmail verplicht', (await txt(p, '#ffout')).includes('factuur'));
@@ -57,7 +57,7 @@ for (const [w, h] of [[1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
   await p.click('#vbody [data-v="klanten"]'); await p.waitForTimeout(80);
   await p.evaluate((nm) => { const x = DB.alle().find((y) => y.naam === nm && y.s === 'geboekt'); ga('detail', x.id); }, titel1); await p.waitForTimeout(60); { const pt = await txt(p, '#paneel'), pl = await n(p, '#pbouw svg polyline'); t(W + 'Henk ziet bouwplek', pt.includes('2 rijen getekend') && pl === 4); if (!pt.includes('2 rijen')) console.log(pt.slice(0, 300), pl); } await p.evaluate(() => sluit()); await p.evaluate(() => ga('klanten')); await p.waitForTimeout(40);
   t(W + 'boeking staat bij Klanten', (await txt(p, '#main')).includes(titel1));
-  await p.evaluate(() => ga('planning')); await p.waitForTimeout(40); t(W + 'boeking staat in Planning', (await txt(p, '#main')).includes(titel1) && await n(p, '#main .t-pl .r') === 10);
+  await p.evaluate(() => ga('planning')); await p.waitForTimeout(40); t(W + 'boeking staat in Planning', (await txt(p, '#main')).includes(titel1) && await n(p, '#main .t-pl .r') === 11);
   // Klanten: herinnering + lijstweergave
   await naar(p, 'klanten');
   if (mob) await p.click('[data-ktab="verstuurd"]');

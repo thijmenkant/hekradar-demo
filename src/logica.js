@@ -123,6 +123,9 @@ function bouw() {
    ['Sinterklaasintocht Zaltbommel', 'Zaltbommel', 'Zaltbommel', 'Gelderland', '2026-11-22', 'Comité Sint Zaltbommel', 1, 'Achteringang van het plein']]
     .forEach(([naam, plaats, gem, prov, datum, org, b, los]) => E.push({ id: id++, km: km(plaats), pub: '', naam, plaats, gem, prov, datum, fase: 'V', soort: 'intocht', bokken: b, s: 'geleverd', nieuw: false, verstuurd: '2026-10-' + (20 + id % 8),
       org: { naam: org, email: `info@${slug(org)}.voorbeeld`, soort: 'algemeen', bron: `${slug(org)}.voorbeeld/contact`, zek: 90 }, boeking: { los, contact: 'Contactpersoon ter plaatse (voorbeeld)', prijs: b * PRIJS_BOK } }));
+  // Eén geboekte klus binnen 14 dagen, zodat de Agenda iets te leveren heeft (verzonnen).
+  E.push({ id: id++, km: km('Leerdam'), pub: '', naam: 'Winterfair Leerdam', plaats: 'Leerdam', gem: 'Vijfheerenlanden', prov: 'Utrecht', datum: addDag(VANDAAG, 9), fase: 'V', soort: 'markt', bokken: 1, s: 'geboekt', nieuw: false, verstuurd: '2026-11-12', mail: { bokken: 1, datum: addDag(VANDAAG, 9) },
+    org: { naam: 'Ondernemersvereniging Leerdam', email: 'info@ondernemersvereniging-leerdam.voorbeeld', soort: 'algemeen', bron: 'ondernemersvereniging-leerdam.voorbeeld/contact', zek: 90 }, boeking: { los: 'Parkeerplaats naast de kerk', contact: 'Contactpersoon ter plaatse (voorbeeld)', prijs: PRIJS_BOK } });
   // Klussen uit het vorige seizoen (verzonnen), om "Volgend jaar" te laten zien
   [['Nieuwjaarsloop Gorinchem', 'Gorinchem', 'Gorinchem', 'Zuid-Holland', '2026-01-04', 'Atletiekclub Gorinchem', 1, 'Bij de start op de Grote Markt', 'loop'],
    ['Carnavalsoptocht Woudrichem', 'Woudrichem', 'Altena', 'Noord-Brabant', '2026-02-15', 'C.V. De Keiebijters', 1, 'Parkeerplaats aan de Kerkstraat', 'carnaval'],

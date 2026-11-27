@@ -169,6 +169,41 @@ t('links: meerdere statussen tegelijk', await p.evaluate(() => STATUS.join() ===
 t('kolom: filter op afstand', await p.evaluate(() => AFST === 50 && HUIDIG.every((i) => (DB.vind(i).km || 0) <= 50)));
 await p.close();
 
+// Aantal en prijs: zelf een aantal typen en transport apart rekenen; mail, bon en boeking rekenen mee
+p = await nieuw();
+const pr = await vind(p, () => voorraad().klaar.find((y) => y.org && y.org.email && vrijOp(y.datum, y.id) >= 2).id);
+await open(p, pr);
+await p.fill('#pzelf', '75'); await p.waitForTimeout(30);
+t('zelf aantal: bon rekent mee', (await txt(p, '#pbon')).includes('75 fietsenrekken') && (await txt(p, '#pbon .bon-tot')).includes('450'));
+t('zelf aantal: mail past zich aan', (await txt(p, '#paneel .mail .pr')).includes('75 fietsenrekken') && (await txt(p, '#paneel .mail .pr')).includes('zitten in de prijs'));
+t('zelf aantal: focus blijft in het veld', await p.evaluate(() => document.activeElement.id) === 'pzelf');
+await p.fill('#ptrans', '85'); await p.waitForTimeout(30);
+t('transport: totaal in de bon', (await txt(p, '#pbon .bon-tot')).includes('535'));
+t('transport: mail noemt transportkosten', /plus €85 transportkosten\. Samen €535/.test(await txt(p, '#paneel .mail .pr')) && !(await txt(p, '#paneel .mail .pr')).includes('zitten in de prijs'));
+await p.fill('#pzelf', '9999'); await p.press('#pzelf', 'Tab'); await p.waitForTimeout(30);
+t('zelf aantal begrensd op wat vrij is', await vind(p, (i) => DB.vind(i).bokken <= vrijOp(DB.vind(i).datum, i), pr));
+await p.fill('#pzelf', '75'); await p.press('#pzelf', 'Tab');
+await p.click('#paneel [data-a="probeer"]'); await p.waitForTimeout(150);
+t('boekpagina: transport en totaal', (await txt(p, '.kp-sam')).includes('Transportkosten') && (await txt(p, '#ftot')).includes('535'));
+await p.keyboard.press('Escape'); await p.waitForTimeout(40);
+await p.click('#paneel [data-trans="in"]'); await p.waitForTimeout(40);
+t('transport terug in de prijs', (await txt(p, '#paneel .mail .pr')).includes('zitten in de prijs') && (await txt(p, '#pbon .bon-tot')).includes('450'));
+await p.close();
+
+// Tekenen: twee losse gebieden; tik op het eerste punt sluit, de volgende tik begint een nieuw stuk
+p = await nieuw();
+await open(p, await vind(p, () => voorraad().klaar.find((y) => y.org && y.org.email).id));
+await p.click('#paneel [data-a="probeer"]'); await p.waitForSelector('#bschets', { timeout: 15000 });
+const tik = async (x, y) => { await p.click('#bschets', { position: { x, y } }); await p.waitForTimeout(20); };
+await tik(30, 30); await tik(120, 30); await tik(120, 100); await tik(31, 31);
+t('gebied sluit op eerste punt', (await txt(p, '#bstatus')).includes('1 gebied') && await p.$$eval('#bschets polygon', (l) => l.length) === 1);
+await tik(200, 40); await tik(280, 40); await tik(280, 120); await tik(200, 41);
+t('tweede gebied los van het eerste', (await txt(p, '#bstatus')).includes('2 gebieden') && await p.$$eval('#bschets polygon', (l) => l.length) === 2);
+await tik(40, 160); await tik(150, 160); await tik(151, 160);
+t('rij afronden op laatste punt', (await txt(p, '#bstatus')).includes('1 rij en 2 gebieden'));
+await p.click('[data-teken="klaar"]'); t('tekening klaar met gebieden', (await txt(p, '#bstatus')).includes('Tekening klaar: 1 rij en 2 gebieden'));
+await p.close();
+
 if (fouten.length) { fout += fouten.length; console.log('JS-fouten:', fouten); }
 console.log(`bedrijfsregels: ${ok} geslaagd, ${fout} mislukt`);
 await b.close(); process.exit(fout ? 1 : 0);
