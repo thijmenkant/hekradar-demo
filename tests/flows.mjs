@@ -50,8 +50,9 @@ for (const [w, h] of [[1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
   await p.click('#bschets', { position: { x: 300, y: 30 } }); t(W + 'na klaar niet meer tekenen', (await n(p, '#bschets circle')) === 0); await p.fill('#fnaam', 'Test'); await p.fill('#ftel', '0612345678');
   await p.check('input[value="factuur"]'); await p.check('#fok'); await p.click('#fknop');
   t(W + 'factuurmail verplicht', (await txt(p, '#ffout')).includes('factuur'));
-  await p.fill('#fmail', 'pen@club.voorbeeld'); await p.click('#fknop'); await p.waitForTimeout(50);
+  await p.fill('#fmail', 'pen@club.voorbeeld'); await p.fill('#fdat', '2027-05-01'); await p.click('#fknop'); await p.waitForTimeout(50);
   t(W + 'geboekt', (await txt(p, '#vbody')).includes('Geboekt, factuur volgt'));
+  t(W + 'gekozen datum komt in de boeking', (await p.evaluate((nm) => DB.alle().find((y) => y.naam === nm && y.s === 'geboekt').datum, titel1)) === '2027-05-01');
   await p.click('#vbody [data-v="klanten"]'); await p.waitForTimeout(80);
   await p.evaluate((nm) => { const x = DB.alle().find((y) => y.naam === nm && y.s === 'geboekt'); ga('detail', x.id); }, titel1); await p.waitForTimeout(60); { const pt = await txt(p, '#paneel'), pl = await n(p, '#pbouw svg polyline'); t(W + 'Henk ziet bouwplek', pt.includes('2 rijen getekend') && pl === 4); if (!pt.includes('2 rijen')) console.log(pt.slice(0, 300), pl); } await p.evaluate(() => sluit()); await p.evaluate(() => ga('klanten')); await p.waitForTimeout(40);
   t(W + 'boeking staat bij Klanten', (await txt(p, '#main')).includes(titel1));

@@ -1086,7 +1086,7 @@ const dv = (x, y) => (x.datum || '9999').localeCompare(y.datum || '9999');
 const sorteer = (l) => l.sort((a, b) => SORT === 'kans' ? kans(b).score - kans(a).score || dv(a, b) : SORT === 'afstand' ? (a.km || 0) - (b.km || 0) || dv(a, b) : dv(a, b));
 // Kansscore 0–100. Aannames, met Henk vast te stellen; later bij te stellen op wat echt geboekt wordt.
 const KANSREGELS = [
-  ['Bouw: lange huur (meer dan 4 weken)', '+20'], ['Bouw: al afgelopen', '−30'],
+  ['Bouw: lange huur (meer dan 4 weken)', '+20'], ['Bouw: al afgelopen', '−30'], ['Bouw: aanvrager bekend', '+5'],
   ['Vaste klant (vorig jaar geleverd)', '+30'], ['Binnen 30 km van Almkerk', '+25'], ['30 tot 75 km', '+15'], ['Meer dan 150 km', '−20'],
   ['Komt elk jaar terug (vorige edities)', '+10'], ['Over 3 tot 13 weken', '+10'], ['Over minder dan 3 weken', '−5'],
   ['Groot (100 rekken of meer)', '+10'], ['Klein (25 rekken)', '−5'], ['Vergunning net aangevraagd', '+5'],
@@ -1487,7 +1487,7 @@ function resultatenScherm() {
 <div><span>Factuur open</span><b style="color:var(--let-tekst)">${euro(fOpen)}</b><small>${V.facturen.length} facturen</small></div></div>
 <section class="blok s5"><div class="blok-kop"><h2>Van aanbod naar boeking</h2></div><div class="blok-in">${hb([['Aanbod verstuurd', aanbod.length], ['Klant reageerde', reageerde.length], ['Geboekt', geboekt.length]])}
 <p class="kort">Betaalwijze: ${bw('ideal').length}× iDEAL (${euro(bw('ideal').reduce((s, x) => s + bedrag(x), 0))}), ${bw('factuur').length}× factuur (${euro(bw('factuur').reduce((s, x) => s + bedrag(x), 0))}).</p></div></section>
-<section class="blok s7"><div class="blok-kop"><h2>Geboekte omzet per evenementmaand</h2><span class="tel">wanneer het geld binnenkomt</span></div><div class="blok-in">${staafGrafiek(reeks, { max: maxO, stap: stapO, fmt: (n) => n ? '€' + (n >= 1000 ? (n / 1000).toLocaleString('nl-NL') + 'k' : n) : '0', label: euro })}</div></section>
+<section class="blok s7"><div class="blok-kop"><h2>Geboekte omzet per evenementmaand</h2><span class="tel">naar maand van het evenement</span></div><div class="blok-in">${staafGrafiek(reeks, { max: maxO, stap: stapO, fmt: (n) => n ? '€' + (n >= 1000 ? (n / 1000).toLocaleString('nl-NL') + 'k' : n) : '0', label: euro })}</div></section>
 <section class="blok s12"><div class="blok-kop"><h2>Openstaande facturen</h2><span class="tel">${V.facturen.length}</span></div>
 ${V.facturen.length ? `<div class="scrollx"><table class="mini" style="min-width:560px"><tr><th>Klant</th><th>Evenement</th><th>Datum</th><th>Status klus</th><th class="num">Bedrag</th></tr>${V.facturen.sort(dv).map((x) => `<tr class="r" data-open="${x.id}" tabindex="0" style="cursor:pointer"><td><b>${esc(x.org.naam)}</b></td><td>${esc(x.naam)}</td><td>${datumKort(x.datum)}</td><td>${x.s === 'geleverd' ? 'Geleverd' : 'Nog te leveren'}</td><td class="num"><b>${euro(bedrag(x))}</b></td></tr>`).join('')}</table></div>` : leeg('Geen openstaande facturen.')}</section>
 </div></div>`;
@@ -1952,8 +1952,8 @@ document.addEventListener('click', (e) => {
       const bw = (document.querySelector('input[name="bw"]:checked') || {}).value || 'ideal';
       if (bw === 'factuur' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test($('#fmail').value.trim())) { $('#ffout').textContent = 'Vul het mailadres voor de factuur in.'; return; }
       if (!$('#fok').checked) { $('#ffout').textContent = 'Vink de annuleringsregel aan.'; return; }
-      const b = Number($('#fbok').value);
-      zet(id, 'geboekt', { bokken: b, verstuurd: x.verstuurd || VANDAAG, boeking: { los: [losAdres, $('#fuit').value].filter(Boolean).join(' · ') || 'Pin op de kaart', punt: losPunt, bouw: { lijnen: echteLijnen(), schets: bouwSchets, meter: bouwSchets ? 0 : Math.round(echteLijnen().reduce((s, l) => s + lijnMeter(l), 0)), adres: bouwAdres }, contact: $('#fnaam').value + ', ' + $('#ftel').value, prijs: b * PRIJS_BOK, betaling: bw, factuurMail: bw === 'factuur' ? $('#fmail').value.trim() : '', inkoop: bw === 'factuur' ? $('#finkoop').value.trim() : '' } });
+      const b = Number($('#fbok').value), dt = $('#fdat').value || x.datum;
+      zet(id, 'geboekt', { bokken: b, datum: dt, verwachteDatum: false, verstuurd: x.verstuurd || VANDAAG, boeking: { los: [losAdres, $('#fuit').value].filter(Boolean).join(' · ') || 'Pin op de kaart', punt: losPunt, bouw: { lijnen: echteLijnen(), schets: bouwSchets, meter: bouwSchets ? 0 : Math.round(echteLijnen().reduce((s, l) => s + lijnMeter(l), 0)), adres: bouwAdres }, contact: $('#fnaam').value + ', ' + $('#ftel').value, prijs: b * PRIJS_BOK, betaling: bw, factuurMail: bw === 'factuur' ? $('#fmail').value.trim() : '', inkoop: bw === 'factuur' ? $('#finkoop').value.trim() : '' } });
       $('#vbody').innerHTML = `<div class="fb" style="text-align:center;padding:40px 20px"><span class="klantkop">${bw === 'factuur' ? 'Geboekt, factuur volgt' : 'Betaald en geregeld'}</span><span class="mu" style="font-size:13px">De klant krijgt een bevestiging. Henk krijgt een melding; de klus staat bij Klanten en in Planning.</span><button class="btn p" data-v="klanten" data-kt="geboekt">Naar Klanten</button></div>`;
     }
     return;

@@ -183,7 +183,7 @@ const dv = (x, y) => (x.datum || '9999').localeCompare(y.datum || '9999');
 const sorteer = (l) => l.sort((a, b) => SORT === 'kans' ? kans(b).score - kans(a).score || dv(a, b) : SORT === 'afstand' ? (a.km || 0) - (b.km || 0) || dv(a, b) : dv(a, b));
 // Kansscore 0–100. Aannames, met Henk vast te stellen; later bij te stellen op wat echt geboekt wordt.
 const KANSREGELS = [
-  ['Bouw: lange huur (meer dan 4 weken)', '+20'], ['Bouw: al afgelopen', '−30'],
+  ['Bouw: lange huur (meer dan 4 weken)', '+20'], ['Bouw: al afgelopen', '−30'], ['Bouw: aanvrager bekend', '+5'],
   ['Vaste klant (vorig jaar geleverd)', '+30'], ['Binnen 30 km van Almkerk', '+25'], ['30 tot 75 km', '+15'], ['Meer dan 150 km', '−20'],
   ['Komt elk jaar terug (vorige edities)', '+10'], ['Over 3 tot 13 weken', '+10'], ['Over minder dan 3 weken', '−5'],
   ['Groot (100 rekken of meer)', '+10'], ['Klein (25 rekken)', '−5'], ['Vergunning net aangevraagd', '+5'],
