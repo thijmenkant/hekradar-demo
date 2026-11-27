@@ -778,7 +778,7 @@ function frameTekenen() {
   if (!$('#top').dataset.klaar) {
     $('#top').innerHTML = `<div class="merkvlak">${WM}</div><div class="prodvlak niet-m"><span class="prodnaam">HekRadar<em>nieuwe klanten</em></span></div>
 <div class="globaal niet-m" id="globaal">${ICON.zoek}<input id="gzoek" type="search" placeholder="Zoek evenement, klant of plaats" autocomplete="off" aria-label="Zoek in HekRadar"><span class="kbd">/</span><div class="zoekres" id="zoekres" role="listbox"></div></div>
-<div class="top-rechts"><span class="scanregel"><span class="live"></span>Scan vannacht 03:15 · <b>${SCAN.laatsteDagAantal}</b> publicaties</span><span class="gebruiker"><span class="avatar">HZ</span><span class="gnaam">Henk van der Zouwen</span></span></div>
+<div class="top-rechts"><span class="scanregel"><span class="radar" role="img" aria-label="Radar: scant elke nacht om 03:15" title="HekRadar scant elke nacht om 03:15"><i class="radar-veeg"></i><b class="radar-stip s1"></b><b class="radar-stip s2"></b><b class="radar-stip s3"></b></span>Scan vannacht 03:15 · <b>${SCAN.laatsteDagAantal}</b> publicaties</span><span class="gebruiker"><span class="avatar">HZ</span><span class="gnaam">Henk van der Zouwen</span></span></div>
 <button class="zknop" data-zoekm aria-label="Zoeken">${ICON.zoek}</button><button class="mknop" data-meer aria-label="Menu">${ICON.meer}</button>`;
     $('#top').dataset.klaar = 1;
   }
