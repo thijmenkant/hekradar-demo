@@ -1,5 +1,22 @@
 const VANDAAG = '2026-11-26';
-const PRIJS_BOK = 300, REKKEN_BOK = 50;
+const PRIJS_BOK = 300, REKKEN_BOK = 50, BTW = 0.21;
+// Aanname, met Henk vaststellen: hoeveel bokken er zijn. Rekken zijn bezet van de dag vóór tot de dag na het evenement.
+let VOORRAAD_BOK = 10;
+// Besteltermijn per soort (dagen vooraf): zo vroeg komt een evenement in de werklijst. Aanname, bij te stellen op echte boekingen.
+const BESTEL = { intocht: 56, kerstmarkt: 70, loop: 120, markt: 120, dorpsfeest: 120, carnaval: 120, overig: 120, kermis: 150, sport: 150, festival: 180 };
+const bestelDagen = (x) => Math.max(BESTEL[x.soort] || 120, x.vast ? 130 : 0);
+// Alleen algemene adressen krijgen een aanbod (art. 11.7 Telecommunicatiewet); een adres op naam wordt bellen.
+const ALGEMEEN = /^(info|secretariaat|secretaris|contact|bestuur|evenementen?|organisatie|post|mail|hallo|algemeen|administratie|penningmeester)@/i;
+const persoonlijkAdres = (o) => !!(o && o.email && !ALGEMEEN.test(o.email));
+// Afmeldlijst: wie op de afmeldlink klikt, krijgt nooit meer een aanbod (ook niet volgend jaar).
+const AFMELD = new Set();
+const afgemeld = (o) => !!(o && o.email && AFMELD.has(o.email.toLowerCase()));
+const magMailen = (x) => !!(x.org && x.org.email && !afgemeld(x.org) && !persoonlijkAdres(x.org));
+// Feestdagen: Pasen (Gregoriaans), carnavalszondag = Pasen − 49 dagen, Koningsdag 27 april (26 als 27 een zondag is).
+function pasen(j) { const a = j % 19, b = Math.floor(j / 100), c = j % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mnd = Math.floor((h + l - 7 * m + 114) / 31), dg = ((h + l - 7 * m + 114) % 31) + 1; return `${j}-${String(mnd).padStart(2, '0')}-${String(dg).padStart(2, '0')}`; }
+const carnavalZondag = (j) => addDag(pasen(j), -49);
+const koningsdag = (j) => { const d = `${j}-04-27`; return dag(d).getDay() === 0 ? `${j}-04-26` : d; };
+const volgendeEditie = (x) => { const j = Number(x.datum.slice(0, 4)) + 1; if (/^Koningsdag/.test(x.naam)) return koningsdag(j); if (x.soort === 'carnaval') return carnavalZondag(j); return addDag(x.datum, 364); };
 // Echte telling Gemeenteblad (KOOP), publicaties 12–25 nov 2026, opgehaald 26 nov
 const SCAN = { publicaties: 1175, gemeenten: 243, nogTeGaan: 446, aanvraag: 397, laatsteDag: '2026-11-25', laatsteDagAantal: 156 };
 const $ = (s) => document.querySelector(s);
@@ -57,6 +74,7 @@ const slug = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').rep
 function rnd(seed) { let x = seed; return () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; }; }
 function bouw() {
   const r = rnd(42), E = [];
+  const VAST = new Set(['Sinterklaasintocht Gorinchem', 'Lichtjesavond Werkendam', 'Sinterklaasintocht Zaltbommel']);
   let id = 1;
   for (let i = 0; i < 130; i++) {
     const [plaats, gem, prov] = PLAATSEN[Math.floor(r() * PLAATSEN.length)];
@@ -66,11 +84,12 @@ function bouw() {
     const jaar = m >= 11 ? 2026 : 2027;
     let d = 1 + Math.floor(r() * 27);
     if (soort === 'dorpsfeest') d = 27;
+    if (soort === 'carnaval') { const cz = carnavalZondag(jaar); d = Number(cz.slice(8)); }
     if (m === 11) d = 27 + Math.floor(r() * 3);
     if (m === 12) d = 1 + Math.floor(r() * 21);
     const datum = `${jaar}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const naam = ns.replace('{p}', plaats);
-    if (E.some((y) => y.naam === naam)) continue;
+    if (E.some((y) => y.naam === naam) || VAST.has(naam)) continue;
     const orgNaam = os.replace('{p}', plaats).replace('{x}', x);
     const p = r();
     let s = p < 0.36 ? 'klaar' : p < 0.54 ? 'zoekt' : p < 0.63 ? 'zonder' : p < 0.78 ? 'verwacht' : p < 0.86 ? 'verstuurd' : p < 0.91 ? 'antwoord' : p < 0.97 ? 'geboekt' : 'geleverd';
@@ -86,7 +105,7 @@ function bouw() {
     if (s === 'zonder') v.let = 'Alleen een contactformulier en telefoonnummer gevonden.';
     if (s === 'klaar' && r() < 0.2) v.let = 'Adres staat op een evenementenkalender, niet op hun eigen site. Check even.';
     if (s === 'verwacht') v.vorig = `${2 + Math.floor(r() * 4)} eerdere edities gevonden`;
-    if (['verstuurd', 'antwoord', 'geboekt', 'geleverd'].includes(s)) v.verstuurd = '2026-11-' + String(10 + Math.floor(r() * 15)).padStart(2, '0');
+    if (['verstuurd', 'antwoord', 'geboekt', 'geleverd'].includes(s)) { v.verstuurd = '2026-11-' + String(10 + Math.floor(r() * 15)).padStart(2, '0'); v.mail = { bokken: b, datum }; }
     if (s === 'antwoord') v.antwoord = ['Klinkt goed, kunnen het er ook meer zijn?', 'Wat kost het als jullie ook opbouwen?', 'Kunnen we dit volgende week even bellen?'][Math.floor(r() * 3)];
     if (['geboekt', 'geleverd'].includes(s)) v.boeking = { los: ['Achteringang van het plein', 'Parkeerplaats naast de kerk', 'Bij de hoofdingang, naast de containers', 'Zijstraat bij het gemeentehuis'][Math.floor(r() * 4)], contact: 'Contactpersoon ter plaatse (voorbeeld)', prijs: b * PRIJS_BOK };
     E.push(v);
@@ -108,7 +127,7 @@ function bouw() {
   // Volgend jaar: elke geleverde klus komt 120 dagen voor de volgende editie terug als vaste klant.
   // Verwachte datum = zelfde weekdag, 52 weken later. Staat het evenement al in de scan, dan koppelen we.
   E.filter((x) => x.s === 'geleverd').forEach((x) => {
-    const nd = addDag(x.datum, 364); if (dagenTot(nd) < 7) return;
+    const nd = volgendeEditie(x); if (dagenTot(nd) < 7) return;
     const klaarOp = addDag(nd, -120);
     const vast = { id: x.id, datum: x.datum, rekken: x.bokken * REKKEN_BOK, prijs: x.boeking.prijs };
     const al = E.find((y) => y.naam === x.naam && y.id !== x.id && Math.abs(dagenTot(y.datum) - dagenTot(nd)) <= 30);
@@ -161,7 +180,7 @@ const ICON = {
   kalender: I('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
   pin: I('<path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'),
 };
-const STATUSNAAM = { klaar: 'mail klaar', zoekt: 'contact gezocht', zonder: 'geen mailadres', verwacht: 'jaarlijks evenement', bouw: 'bouw en verbouw', gepland: 'volgend jaar gepland', verstuurd: 'aanbod verstuurd', antwoord: 'klant antwoordde', geboekt: 'geboekt', geleverd: 'geleverd', weg: 'afgehandeld' };
+const STATUSNAAM = { verloren: 'verloren', klaar: 'mail klaar', zoekt: 'contact gezocht', zonder: 'geen mailadres', verwacht: 'jaarlijks evenement', bouw: 'bouw en verbouw', gepland: 'volgend jaar gepland', verstuurd: 'aanbod verstuurd', antwoord: 'klant antwoordde', geboekt: 'geboekt', geleverd: 'geleverd', weg: 'afgehandeld' };
 const KLANT = ['verstuurd', 'antwoord', 'geboekt', 'geleverd'];
 const BSTATUS = { loopt: 'loopt of komt', onbekend: 'periode onbekend', afgelopen: 'afgelopen' };
 const SOORTBOUW = { station: 'station', school: 'school', huisvesting: 'huisvesting', bouw: 'bouwplaats', overig: 'overig' };
@@ -170,12 +189,15 @@ const periodeKort = (x) => x.datum && x.tot ? `${mj(x.datum)} – ${mj(x.tot)}` 
 const duurTekst = (x) => { if (!x.datum || !x.tot) return ''; const d = Math.round((dag(x.tot) - dag(x.datum)) / 864e5) + 1; return d >= 60 ? `${Math.round(d / 30)} maanden` : `${Math.round(d / 7)} weken`; };
 
 // ---------- logica: wat moet Henk eerst doen? ----------
-// Eerst doen = mail staat klaar én het evenement is over 7 tot 70 dagen (eerder is te laat, later kan nog even wachten), vroegste eerst.
-const eerstDoen = (z) => sorteer(z.filter((x) => actief(x) && binnenAfstand(x) && x.s === 'klaar' && dagenTot(x.datum) >= 7 && dagenTot(x.datum) <= (x.vast ? 130 : 70)));
+// Eerst doen = mail staat klaar én het evenement valt binnen de besteltermijn van zijn soort (minstens 7 dagen vooraf).
+const eerstDoen = (z) => sorteer(z.filter((x) => actief(x) && binnenAfstand(x) && x.s === 'klaar' && magMailen(x) && dagenTot(x.datum) >= 7 && dagenTot(x.datum) <= bestelDagen(x)));
 // Komt eraan = net aangevraagd (nog geen besluit) in de komende 3 maanden: de organisator regelt nu zijn spullen.
 const komtEraan = (z) => sorteer(z.filter((x) => actief(x) && binnenAfstand(x) && x.fase === 'A' && !KLANT.includes(x.s) && !['weg', 'verwacht'].includes(x.s) && !eerstDoen(z).includes(x) && dagenTot(x.datum) >= 7 && dagenTot(x.datum) <= 90));
 const teLaat = (z) => z.filter((x) => actief(x) && ['klaar', 'zoekt'].includes(x.s) && dagenTot(x.datum) >= 0 && dagenTot(x.datum) < 7);
 
+// Voorraad: rekken van geboekte klussen zijn bezet van de dag vóór tot de dag na het evenement.
+const bezetOp = (d, zonder) => E.filter((y) => y.id !== zonder && ['geboekt', 'geleverd'].includes(y.s) && y.datum && Math.abs(dagenTot(y.datum) - dagenTot(d)) <= 2).reduce((s, y) => s + y.bokken, 0);
+const vrijOp = (d, zonder) => Math.max(0, VOORRAAD_BOK - bezetOp(d, zonder));
 const inRegio = (x) => (!PROV || x.prov === PROV) && (!GEM || x.gem === GEM);
 const actief = (x) => !x.later || x.later <= VANDAAG;
 const binnenAfstand = (x) => !AFST || (x.km || 0) <= AFST;
@@ -184,8 +206,8 @@ const sorteer = (l) => l.sort((a, b) => SORT === 'kans' ? kans(b).score - kans(a
 // Kansscore 0–100. Aannames, met Henk vast te stellen; later bij te stellen op wat echt geboekt wordt.
 const KANSREGELS = [
   ['Bouw: lange huur (meer dan 4 weken)', '+20'], ['Bouw: al afgelopen', '−30'], ['Bouw: aanvrager bekend', '+5'],
-  ['Vaste klant (vorig jaar geleverd)', '+30'], ['Binnen 30 km van Almkerk', '+25'], ['30 tot 75 km', '+15'], ['Meer dan 150 km', '−20'],
-  ['Komt elk jaar terug (vorige edities)', '+10'], ['Over 3 tot 13 weken', '+10'], ['Over minder dan 3 weken', '−5'],
+  ['Vaste klant (vorig jaar geleverd)', '+30'], ['Binnen 30 km van Almkerk', '+25'], ['30 tot 75 km', '+15'], ['75 tot 150 km', '−10'], ['Meer dan 150 km', '−20'],
+  ['Komt elk jaar terug (vorige edities)', '+10'], ['Binnen de besteltermijn, meer dan 3 weken vooraf', '+10'], ['Te weinig rekken vrij op die dag', '−30'], ['Over minder dan 3 weken', '−5'],
   ['Groot (100 rekken of meer)', '+10'], ['Klein (25 rekken)', '−5'], ['Vergunning net aangevraagd', '+5'],
   ['Mailadres zeker (90% of meer)', '+5'], ['Mailadres checken', '−5'], ['Alleen bellen of formulier', '−10'], ['Contact nog onbekend', '−15'],
 ];
@@ -193,15 +215,16 @@ function kans(x) {
   const r = [], d = dagenTot(x.datum), b = (n, t) => r.push([n, t]);
   if (x.s === 'bouw') { const d = x.datum && x.tot ? (dag(x.tot) - dag(x.datum)) / 864e5 : 0; if (d > 28) b(20, `lange huur: ${duurTekst(x)}`); if (x.bstatus === 'afgelopen') b(-30, 'al afgelopen'); if (x.aanvrager) b(5, 'aanvrager bekend'); }
   if (x.vast) b(30, `vorig jaar klant (${x.vast.rekken} rekken)`);
-  if (x.km != null) { if (x.km <= 30) b(25, `vlakbij, ± ${x.km} km`); else if (x.km <= 75) b(15, `in de regio, ± ${x.km} km`); else if (x.km > 150) b(-20, `ver weg, ± ${x.km} km`); }
+  if (x.km != null) { if (x.km <= 30) b(25, `vlakbij, ± ${x.km} km`); else if (x.km <= 75) b(15, `in de regio, ± ${x.km} km`); else if (x.km > 150) b(-20, `ver weg, ± ${x.km} km`); else b(-10, `ver, ± ${x.km} km`); }
   if (x.vorig && !x.vast) b(10, 'komt elk jaar terug');
-  if (x.s !== 'bouw' && d >= 21 && d <= 91) b(10, `goed moment: over ${Math.round(d / 7)} weken`); else if (x.s !== 'bouw' && d >= 0 && d < 21) b(-5, 'kort dag');
+  if (x.s !== 'bouw' && d >= 21 && d <= bestelDagen(x)) b(10, `goed moment: over ${Math.round(d / 7)} weken`); else if (x.s !== 'bouw' && d >= 0 && d < 21) b(-5, 'kort dag');
   if (x.s !== 'bouw' && x.bokken >= 2) b(10, `groot: ${x.bokken * REKKEN_BOK} rekken`); else if (x.s !== 'bouw' && x.bokken <= 0.5) b(-5, 'klein evenement');
   if (x.fase === 'A') b(5, 'vergunning net aangevraagd');
   if (x.org && x.org.zek >= 90) b(5, 'mailadres zeker');
   if (x.let) b(-5, 'mailadres checken');
   if (x.s === 'zonder') b(-10, 'alleen bellen of formulier');
   if (x.s === 'zoekt') b(-15, 'contact nog onbekend');
+  if (x.s !== 'bouw' && !KLANT.includes(x.s) && x.datum && dagenTot(x.datum) >= 0 && vrijOp(x.datum, x.id) < x.bokken) b(-30, 'te weinig rekken vrij op die dag');
   const score = Math.max(0, Math.min(100, 40 + r.reduce((s, [n]) => s + n, 0)));
   return { score, niveau: score >= 70 ? 'hoog' : score >= 45 ? 'middel' : 'laag', redenen: r.sort((a, c) => Math.abs(c[0]) - Math.abs(a[0])) };
 }

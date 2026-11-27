@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "python3 src/build.py",
-    "test": "node tests/flows.mjs && node tests/taken.mjs && node tests/opmaak.mjs"
+    "test": "node tests/flows.mjs && node tests/taken.mjs && node tests/opmaak.mjs && node tests/bedrijf.mjs"
   },
   "devDependencies": {
     "playwright": "^1.48.0"
