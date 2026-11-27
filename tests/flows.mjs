@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
-const url = process.env.URL || new URL('../index.html', import.meta.url).href;
+// Deze tests draaien op de oude indeling (?oud); de indeling voor Henk heeft eigen tests in bedrijf.mjs.
+const url = (process.env.URL || new URL('../index.html', import.meta.url).href) + '?oud';
 const b = await chromium.launch({  });
 let ok = 0, fout = 0; const t = (naam, c) => { if (c) ok++; else { fout++; console.log('FAAL:', naam); } };
 const fouten = [];

@@ -1,11 +1,12 @@
 import { chromium } from 'playwright';
-const url = process.env.URL || new URL('../index.html', import.meta.url).href;
+// Deze tests draaien op de oude indeling (?oud); de indeling voor Henk heeft eigen tests in bedrijf.mjs.
+const url = (process.env.URL || new URL('../index.html', import.meta.url).href) + '?oud';
 const thema = process.env.THEMA || '';
 const b = await chromium.launch({  });
 const uit = [];
 async function taak(naam, w, h, stappen, check) {
   const p = await b.newPage({ viewport: { width: w, height: h } });
-  await p.goto(url + (thema ? '?thema=' + thema : '') + '#overzicht'); await p.reload(); await p.waitForTimeout(80);
+  await p.goto(url + (thema ? '&thema=' + thema : '') + '#overzicht'); await p.reload(); await p.waitForTimeout(80);
   let n = 0; for (const s of stappen) { await s(p); n++; await p.waitForTimeout(60); }
   const r = await check(p);
   uit.push(`${r.ok ? 'OK ' : 'NEE'} ${w}px  ${naam}: ${n} handelingen${r.noot ? ' — ' + r.noot : ''}`);

@@ -1384,8 +1384,8 @@ const WM = `<div class="wm">${BIKE('currentColor', '#5cb85f', 28).replace('strok
 // Kleurconcept kiezen voor de vergelijking: ?thema=a … e (zonder = standaard)
 const THEMA = new URLSearchParams(location.search).get('thema'); if (THEMA) document.documentElement.dataset.thema = THEMA;
 // Navigatie: gegroepeerd op wat Henk komt doen.
-// Voorbeeld van een indeling met drie schermen voor Henk: open met ?henk in de link. Zonder ?henk: de huidige indeling.
-const HENK = new URLSearchParams(location.search).has('henk');
+// Indeling voor Henk is de standaard. De oude indeling (Werklijst, Planning, ...) blijft bereikbaar met ?oud in de link.
+const HENK = !new URLSearchParams(location.search).has('oud');
 const GROEPEN_STANDAARD = [
   ['Vandaag', [['overzicht', 'Overzicht']]],
   ['Nieuwe klanten vinden', [['werklijst', 'Werklijst'], ['evenementen', 'Evenementen'], ['bouw', 'Bouw en verbouw']]],

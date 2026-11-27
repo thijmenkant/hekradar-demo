@@ -1,7 +1,8 @@
 import { chromium } from 'playwright';
 // Opmaaktest: zoekt op elk scherm en elke breedte naar tekst over tekst, uitstekende of weggevallen kolommen,
 // horizontale scroll en JS-fouten. Afkapping met … is bedoeld en telt niet.
-const url = process.env.URL || new URL('../index.html', import.meta.url).href;
+// Deze tests draaien op de oude indeling (?oud); de indeling voor Henk heeft eigen tests in bedrijf.mjs.
+const url = (process.env.URL || new URL('../index.html', import.meta.url).href) + '?oud';
 let fout = 0, getest = 0;
 const b = await chromium.launch();
 const views = ['overzicht','werklijst','evenementen','bouw','klanten','planning','markt','resultaten','werkwijze','instellingen'];
