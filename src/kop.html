@@ -522,9 +522,12 @@ details.nog[open] > summary { display: none; }
 .seg button span { display: block; font-size: 12px; color: var(--ink3); font-variant-numeric: tabular-nums; }
 .seg button[aria-pressed="true"] { background: var(--x-inkt); color: #fff; }
 .seg button[aria-pressed="true"] span { color: rgba(255,255,255,.78); }
-.mail { border: 1px solid var(--lijn); border-radius: var(--rad); font-size: 13px; line-height: 1.55; }
-.mail .mk { padding: 8px 12px; border-bottom: 1px solid var(--lijn); background: var(--vlak2); display: grid; grid-template-columns: 68px 1fr; gap: 2px 8px; font-size: 12px; }
-.mail .mk span { color: var(--ink3); }
+.mail { border: 1px solid #3a4046; border-radius: var(--rad); font-size: 13px; line-height: 1.55; overflow: hidden; }
+/* Mailkop donkergrijs: je ziet meteen dat dit een e-mail is */
+.mail .mk { padding: 10px 12px; background: #3a4046; color: #fff; display: grid; grid-template-columns: 68px 1fr; gap: 2px 8px; font-size: 12px; }
+.mail .mk span { color: #b9c0c6; }
+.mail .mk-label { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font: 600 10.5px/1 var(--merk); letter-spacing: .08em; text-transform: uppercase; color: #b9c0c6; margin-bottom: 4px; }
+.mail .mk-label svg { width: 14px; height: 14px; }
 .mail .mb { padding: 12px; }
 .mail p { margin: 0 0 10px; }
 .mail .pr { background: var(--x-titelvlak); border-left: 3px solid var(--x-acc); padding: 6px 10px; }
@@ -616,10 +619,12 @@ details.nog[open] > summary { display: none; }
 .kp-sam dl { display: grid; grid-template-columns: 76px 1fr; gap: 4px 8px; margin: 0; }
 .kp-sam dt { color: var(--ink3); } .kp-sam dd { margin: 0; }
 .kp-sam ul { margin: 0; padding-left: 18px; color: var(--ink2); display: grid; gap: 3px; }
-.klantzicht { display: flex; gap: 12px; align-items: center; margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--invoer); background: var(--vlak2); font-size: 13px; }
-.klantzicht b { display: block; font-weight: 600; }
+/* Klantkant: rood, zodat Henk ziet dat hij hier de boekpagina van de klant kan bekijken */
+.klantzicht { display: flex; gap: 12px; align-items: center; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--urg); border-left-width: 4px; background: var(--urg-bg); border-radius: var(--rad); font-size: 13px; }
+.klantzicht b { display: block; font-weight: 600; color: var(--urg); margin-bottom: 2px; }
 .klantzicht span { color: var(--ink2); }
-.klantzicht .btn { flex: none; }
+.klantzicht .btn { flex: none; background: var(--urg); border-color: var(--urg); color: #fff; font-weight: 600; }
+.klantzicht .btn:hover { filter: brightness(1.1); }
 .p-body > .p-titelvlak { margin: 0 -20px; }
 .p-waarom { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .fb { display: flex; flex-direction: column; gap: 10px; padding: 16px 0; border-top: 1px solid var(--lijn); }

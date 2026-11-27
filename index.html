@@ -522,9 +522,12 @@ details.nog[open] > summary { display: none; }
 .seg button span { display: block; font-size: 12px; color: var(--ink3); font-variant-numeric: tabular-nums; }
 .seg button[aria-pressed="true"] { background: var(--x-inkt); color: #fff; }
 .seg button[aria-pressed="true"] span { color: rgba(255,255,255,.78); }
-.mail { border: 1px solid var(--lijn); border-radius: var(--rad); font-size: 13px; line-height: 1.55; }
-.mail .mk { padding: 8px 12px; border-bottom: 1px solid var(--lijn); background: var(--vlak2); display: grid; grid-template-columns: 68px 1fr; gap: 2px 8px; font-size: 12px; }
-.mail .mk span { color: var(--ink3); }
+.mail { border: 1px solid #3a4046; border-radius: var(--rad); font-size: 13px; line-height: 1.55; overflow: hidden; }
+/* Mailkop donkergrijs: je ziet meteen dat dit een e-mail is */
+.mail .mk { padding: 10px 12px; background: #3a4046; color: #fff; display: grid; grid-template-columns: 68px 1fr; gap: 2px 8px; font-size: 12px; }
+.mail .mk span { color: #b9c0c6; }
+.mail .mk-label { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font: 600 10.5px/1 var(--merk); letter-spacing: .08em; text-transform: uppercase; color: #b9c0c6; margin-bottom: 4px; }
+.mail .mk-label svg { width: 14px; height: 14px; }
 .mail .mb { padding: 12px; }
 .mail p { margin: 0 0 10px; }
 .mail .pr { background: var(--x-titelvlak); border-left: 3px solid var(--x-acc); padding: 6px 10px; }
@@ -616,10 +619,12 @@ details.nog[open] > summary { display: none; }
 .kp-sam dl { display: grid; grid-template-columns: 76px 1fr; gap: 4px 8px; margin: 0; }
 .kp-sam dt { color: var(--ink3); } .kp-sam dd { margin: 0; }
 .kp-sam ul { margin: 0; padding-left: 18px; color: var(--ink2); display: grid; gap: 3px; }
-.klantzicht { display: flex; gap: 12px; align-items: center; margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--invoer); background: var(--vlak2); font-size: 13px; }
-.klantzicht b { display: block; font-weight: 600; }
+/* Klantkant: rood, zodat Henk ziet dat hij hier de boekpagina van de klant kan bekijken */
+.klantzicht { display: flex; gap: 12px; align-items: center; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--urg); border-left-width: 4px; background: var(--urg-bg); border-radius: var(--rad); font-size: 13px; }
+.klantzicht b { display: block; font-weight: 600; color: var(--urg); margin-bottom: 2px; }
 .klantzicht span { color: var(--ink2); }
-.klantzicht .btn { flex: none; }
+.klantzicht .btn { flex: none; background: var(--urg); border-color: var(--urg); color: #fff; font-weight: 600; }
+.klantzicht .btn:hover { filter: brightness(1.1); }
 .p-body > .p-titelvlak { margin: 0 -20px; }
 .p-waarom { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .fb { display: flex; flex-direction: column; gap: 10px; padding: 16px 0; border-top: 1px solid var(--lijn); }
@@ -1701,7 +1706,7 @@ ${blok('s-kans', 'Kansscore', `<div class="blok-in klein mu" style="padding-bott
 function mailHtml(x) {
   const o = x.org, m = x.mail || { bokken: x.bokken, datum: x.datum };
   x = Object.assign({}, x, { bokken: m.bokken, datum: m.datum });
-  return `<div class="mail"><div class="mk"><span>Aan</span><b style="font-weight:500">${esc(o.email)}</b><span>Onderwerp</span><b style="font-weight:500">Fietsenrekken voor ${esc(x.naam)}${x.vast ? ', net als vorig jaar?' : '?'}</b></div><div class="mb"><p>Beste ${esc(o.naam)},</p>
+  return `<div class="mail"><div class="mk"><div class="mk-label">${ICON.mail}E-mail</div><span>Aan</span><b style="font-weight:500">${esc(o.email)}</b><span>Onderwerp</span><b style="font-weight:500">Fietsenrekken voor ${esc(x.naam)}${x.vast ? ', net als vorig jaar?' : '?'}</b></div><div class="mb"><p>Beste ${esc(o.naam)},</p>
 <p>${x.vast ? `Vorig jaar stonden onze fietsenrekken bij ${esc(x.naam)}: ${x.vast.rekken} stuks. Het evenement komt er weer aan, waarschijnlijk rond ${datumLang(x.datum)}. Zullen we het weer net zo doen?` : x.s === 'verwacht' ? `${esc(x.naam)} komt er weer aan, waarschijnlijk rond ${datumLang(x.datum)}. Zijn de fietsenrekken al geregeld?` : `Ik zag dat ${esc(x.naam)} op ${datumLang(x.datum)} in ${esc(x.plaats)} plaatsvindt. Komen er mensen op de fiets?`}${x.vast ? '' : ' Dan regelen wij de fietsenrekken, zodat jullie daar geen omkijken naar hebben.'}</p>
 <p class="pr"><b>${x.bokken * REKKEN_BOK} fietsenrekken</b> voor <b>${euro(x.bokken * PRIJS_BOK)}</b> excl. btw.<br>Transport, leveren en ophalen zitten in de prijs.</p>
 <p>${x.vast ? 'In het formulier geef je de loslocatie door; is die hetzelfde als vorig jaar, dan ben je zo klaar.' : 'In het formulier geef je aan waar we kunnen lossen.'} Je betaalt direct via iDEAL of op factuur, en dan is het geregeld.</p><p><button class="mknop" data-a="probeer" data-id="${x.id}" title="Toon wat de klant ziet">Bekijk en boek</button></p>
@@ -1749,7 +1754,7 @@ ${x.pub ? `<dt>Bron</dt><dd>${pubLink(x, 'vergunning bekijken')}</dd>` : ''}</dl
 ${x.boeking ? `<dt>Geboekt</dt><dd>${euro(x.boeking.prijs)} · ${x.bokken * REKKEN_BOK} rekken</dd><dt>Betaling</dt><dd>${x.boeking.betaling === 'factuur' ? `${betTekst(x)}${x.boeking.betaald ? ' op ' + datumKort(x.boeking.betaald) : ''}${x.boeking.factuurMail ? ' · ' + esc(x.boeking.factuurMail) : ''}${x.boeking.inkoop ? ' · kenmerk ' + esc(x.boeking.inkoop) : ''}` : 'iDEAL, betaald'}</dd><dt>Lossen</dt><dd>${esc(x.boeking.los)}${x.boeking.punt && x.boeking.punt.lat != null ? ` · <a href="https://www.google.com/maps/dir/?api=1&destination=${x.boeking.punt.lat},${x.boeking.punt.lng}" target="_blank" rel="noopener">route ↗</a>` : ''}</dd>${x.boeking.bouw && x.boeking.bouw.belMe ? '<dt>Bouwen</dt><dd><span class="open">Klant wil even bellen</span> over waar de rekken komen</dd>' : ''}${x.boeking.bouw && x.boeking.bouw.lijnen && x.boeking.bouw.lijnen.length ? `<dt>Bouwen</dt><dd>${x.boeking.bouw.lijnen.length} ${x.boeking.bouw.lijnen.length === 1 ? 'rij' : 'rijen'} getekend${x.boeking.bouw.meter ? `, samen ± ${x.boeking.bouw.meter} m` : ''}${x.boeking.bouw.adres ? ' · ' + esc(x.boeking.bouw.adres) : ''}<div class="bouwkaart" id="pbouw" data-id="${x.id}">${bouwSvg(x.boeking)}<span class="bk-leg"><i class="l"></i>rekken <i class="p"></i>lossen</span></div></dd>` : ''}<dt>Op de dag</dt><dd>${belbaar(esc(x.boeking.contact))}</dd>` : ''}
 ${x.volgend ? (() => { const v = DB.vind(x.volgend); return `<dt>Volgend jaar</dt><dd>${v.s === 'gepland' ? `mail wordt klaargezet op ${metJaar(v.klaarOp)}` : 'mail staat klaar'} · <button class="link" data-open="${x.volgend}">bekijk</button></dd>`; })() : ''}</dl></section>` : '';
   const aantal = isKlant ? '' : `<section class="sectie"><h2>Aantal<span class="rechts">voorstel voor een ${esc(x.soort)}</span></h2><div class="seg" role="group" aria-label="Aantal fietsenrekken">${[0.5, 1, 2, 4].map((n) => `<button data-pak="${n}" data-id="${x.id}" aria-pressed="${n === x.bokken}" ${vrij != null && n > vrij ? 'disabled title="Niet genoeg rekken vrij op die dag"' : ''}><b>${n * REKKEN_BOK} rekken</b><span>${euro(n * PRIJS_BOK)}</span></button>`).join('')}</div><p class="kort">De mail past zich aan.${vrij != null ? ` Rond die dag zijn ${vrij * REKKEN_BOK} van de ${VOORRAAD_BOK * REKKEN_BOK} rekken vrij.` : ''}</p></section>`;
-  const mail = o.email && x.s !== 'geleverd' ? `<section class="sectie"><h2>${isKlant ? 'Verstuurde mail' : 'Mail die de klant krijgt'}</h2>${mailHtml(x)}${!isKlant ? `<div class="klantzicht"><div><b>En dan?</b><span>De klant klikt op “Bekijk en boek” en komt op een boekpagina: aantal, loslocatie, contact en betalen.</span></div><button class="btn" data-a="probeer" data-id="${x.id}">Boekpagina bekijken</button></div>` : ''}</section>` : '';
+  const mail = o.email && x.s !== 'geleverd' ? `<section class="sectie"><h2>${isKlant ? 'Verstuurde mail' : 'Mail die de klant krijgt'}</h2>${mailHtml(x)}${!isKlant ? `<div class="klantzicht"><div><b>Wat ziet de klant na “Bekijk en boek”?</b><span>Een boekpagina: aantal, losplek, waar de rekken komen, contact en betalen.</span></div><button class="btn" data-a="probeer" data-id="${x.id}">Bekijk wat de klant ziet →</button></div>` : ''}</section>` : '';
   const hoofdKnop = kanSturen ? `<button class="btn p" data-a="stuur" data-id="${x.id}">${ICON.mail} Versturen uit Outlook</button>`
     : x.s === 'zonder' ? `<button class="btn p" data-a="bel" data-id="${x.id}">${ICON.bel} Bellen of formulier</button>`
     : x.s === 'verstuurd' ? (x.herinnerd ? '<span class="mu klein">Herinnering is verstuurd</span>' : `<button class="btn" data-a="herinner" data-id="${x.id}">${ICON.herhaal} Herinnering sturen</button>`)
